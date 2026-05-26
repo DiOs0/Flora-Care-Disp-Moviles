@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Flora Care</string>
+    <string name="guardar_planta">Guardar planta</string>
+    <string name="ultimo_riego">ultimo riego</string>
 </resources>
