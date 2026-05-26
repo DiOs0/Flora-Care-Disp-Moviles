@@ -12,10 +12,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FloraCare">
         <activity
-            android:name=".MainActivity"
+            android:name=".activities.AddPlantActivity"
             android:exported="false" />
         <activity
-            android:name=".activities.AddPlantActivity"
+            android:name=".activities.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

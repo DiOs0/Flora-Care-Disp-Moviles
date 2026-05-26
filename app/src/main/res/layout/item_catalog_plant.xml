@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    app:cardBackgroundColor="@color/white"
+    app:cardCornerRadius="20dp"
+    app:cardElevation="1dp"
+    app:strokeColor="@color/accent_green"
+    app:strokeWidth="1dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="12dp">
+
+        <ImageView
+            android:id="@+id/ivCatalogPlantImage"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_launcher_foreground"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="ContentDescription" />
+
+        <TextView
+            android:id="@+id/tvCatalogPlantName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="8dp"
+            android:text="Monstera"
+            android:textColor="@color/text_dark"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@id/ivCatalogArrow"
+            app:layout_constraintStart_toEndOf="@id/ivCatalogPlantImage"
+            app:layout_constraintTop_toTopOf="@id/ivCatalogPlantImage" />
+
+        <TextView
+            android:id="@+id/tvCatalogPlantScientific"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="2dp"
+            android:layout_marginEnd="8dp"
+            android:text="Monstera deliciosa"
+            android:textColor="@color/text_gray"
+            android:textSize="12sp"
+            app:layout_constraintEnd_toStartOf="@id/ivCatalogArrow"
+            app:layout_constraintStart_toEndOf="@id/ivCatalogPlantImage"
+            app:layout_constraintTop_toBottomOf="@id/tvCatalogPlantName" />
+
+        <LinearLayout
+            android:id="@+id/tagContainer"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toStartOf="@id/ivCatalogArrow"
+            app:layout_constraintStart_toEndOf="@id/ivCatalogPlantImage"
+            app:layout_constraintTop_toBottomOf="@id/tvCatalogPlantScientific">
+
+            <TextView
+                android:id="@+id/tvCatalogPlantType"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_tag_pill"
+                android:paddingStart="8dp"
+                android:paddingTop="4dp"
+                android:paddingEnd="8dp"
+                android:paddingBottom="4dp"
+                android:text="Tropical"
+                android:textColor="@color/primary_green"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvCatalogPlantLight"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="6dp"
+            android:layout_marginEnd="8dp"
+            android:text="Luz indirecta"
+            android:textColor="@color/text_gray"
+            android:textSize="12sp"
+            app:layout_constraintEnd_toStartOf="@id/ivCatalogArrow"
+            app:layout_constraintStart_toEndOf="@id/ivCatalogPlantImage"
+            app:layout_constraintTop_toBottomOf="@id/tagContainer" />
+
+        <TextView
+            android:id="@+id/tvCatalogPlantWater"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="2dp"
+            android:layout_marginEnd="8dp"
+            android:text="1 vez/semana"
+            android:textColor="@color/text_gray"
+            android:textSize="12sp"
+            app:layout_constraintEnd_toStartOf="@id/ivCatalogArrow"
+            app:layout_constraintStart_toEndOf="@id/ivCatalogPlantImage"
+            app:layout_constraintTop_toBottomOf="@id/tvCatalogPlantLight" />
+
+        <ImageView
+            android:id="@+id/ivCatalogArrow"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_chevron_right"
+            android:tint="@color/text_gray"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="ContentDescription" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</com.google.android.material.card.MaterialCardView>
