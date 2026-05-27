@@ -9,6 +9,7 @@ import com.uce.floracare.databinding.ActivityMainBinding
 import com.uce.floracare.activities.AuxiliarFragment
 import com.uce.floracare.activities.Jhon_AddPlant.AddPlantActivity
 import com.uce.floracare.activities.Jhon_AddPlant.AddPlantFragment
+import com.uce.floracare.activities.Milan_Ajustes.AjustesFragment
 import com.uce.floracare.activities.Osorio_Explore.ExploreFragment
 
 class MainActivity : AppCompatActivity() {
@@ -26,6 +27,10 @@ class MainActivity : AppCompatActivity() {
 
         binding.bottomNavigation.setOnItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
+                R.id.nav_jardin->{
+                    loadFragment(AuxiliarFragment())
+                    true
+                }
                 R.id.nav_explorar -> {
                     loadFragment(ExploreFragment())
                     true
@@ -36,9 +41,8 @@ class MainActivity : AppCompatActivity() {
                     true
                 }
 
-                R.id.nav_jardin,
                 R.id.nav_ajustes -> {
-                    loadFragment(AuxiliarFragment())
+                    loadFragment(AjustesFragment())
                     true
                 }
 

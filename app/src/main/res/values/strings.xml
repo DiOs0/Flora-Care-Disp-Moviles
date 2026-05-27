@@ -3,4 +3,6 @@
     <string name="guardar_planta">Guardar planta</string>
     <string name="ultimo_riego">ultimo riego</string>
     <string name="pantalla_explorar">Pantalla de Explorar</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
