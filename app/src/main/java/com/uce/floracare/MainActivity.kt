@@ -7,6 +7,8 @@ import androidx.fragment.app.Fragment
 import com.uce.floracare.R
 import com.uce.floracare.databinding.ActivityMainBinding
 import com.uce.floracare.activities.AuxiliarFragment
+import com.uce.floracare.activities.Jhon_AddPlant.AddPlantActivity
+import com.uce.floracare.activities.Jhon_AddPlant.AddPlantFragment
 import com.uce.floracare.activities.Osorio_Explore.ExploreFragment
 
 class MainActivity : AppCompatActivity() {
@@ -30,7 +32,7 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 R.id.nav_add -> {
-                    startActivity(Intent(this, AddPlantActivity::class.java))
+                    loadFragment(AddPlantFragment())
                     true
                 }
 

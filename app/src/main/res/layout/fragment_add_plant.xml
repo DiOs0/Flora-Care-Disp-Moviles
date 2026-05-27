@@ -1,252 +1,310 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F8F9F5"
-    android:fillViewport="true">
+    android:background="#F8F9F5">
 
-    <LinearLayout
+    <!-- HEADER: Fijo en la parte superior -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/headerLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="20dp">
+        android:padding="20dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <ImageView
+            android:id="@+id/ic_leaf"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_launcher_foreground"
+            app:tint="#2D5A27"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Nueva Planta"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="#2D5A27"
+            android:layout_marginStart="8dp"
+            app:layout_constraintStart_toEndOf="@id/ic_leaf"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="#e7e9e1"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- ZONA DESLIZABLE: Toma el resto de la pantalla -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        app:layout_constraintTop_toBottomOf="@id/headerLayout"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- EL SECRETO: Un solo LinearLayout envolviendo todo el formulario -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp">
+            android:orientation="vertical"
+            android:paddingHorizontal="20dp"
+            android:paddingBottom="40dp">
 
-            <ImageView
-                android:id="@+id/ic_leaf"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/ic_launcher_foreground"
-                app:tint="#2D5A27"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"/>
+            <!-- FOTO DE LA PLANTA -->
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="200dp"
+                android:layout_height="200dp"
+                android:layout_gravity="center"
+                android:layout_marginBottom="32dp">
 
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/imgPlantPhoto"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="#edefe7"
+                    android:scaleType="centerCrop"
+                    app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.ExtraLarge" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="FOTO DE LA PLANTA"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="#72796e"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"/>
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/btnCapturePhoto"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:backgroundTint="#2D5A27"
+                    app:tint="#FFFFFF"
+                    android:src="@drawable/ic_launcher_foreground"
+                    app:elevation="4dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:layout_marginEnd="-8dp"
+                    android:layout_marginBottom="-8dp"/>
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <!-- NOMBRE -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Nueva Planta"
-                android:textSize="22sp"
+                android:text="Nombre de la Planta"
+                android:textColor="#42493e"
                 android:textStyle="bold"
-                android:textColor="#2D5A27"
-                android:layout_marginStart="8dp"
-                app:layout_constraintStart_toEndOf="@id/ic_leaf"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"/>
+                android:layout_marginBottom="4dp"/>
 
-            <com.google.android.material.imageview.ShapeableImageView
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="#e7e9e1"
-                app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"/>
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="200dp"
-            android:layout_height="200dp"
-            android:layout_gravity="center"
-            android:layout_marginBottom="32dp">
-
-            <com.google.android.material.imageview.ShapeableImageView
-                android:id="@+id/imgPlantPhoto"
+            <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="#edefe7"
-                android:scaleType="centerCrop"
-                app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.ExtraLarge" />
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:boxBackgroundColor="#f3f4ed"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxStrokeColor="#2D5A27"
+                app:endIconMode="custom"
+                app:endIconDrawable="@drawable/ic_search">
 
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etPlantName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Ej: Sr. Helecho"
+                    android:inputType="textCapWords" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- ESPECIE -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="FOTO DE PERFIL"
-                android:textSize="12sp"
+                android:text="Especie"
+                android:textColor="#42493e"
                 android:textStyle="bold"
-                android:textColor="#72796e"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"/>
+                android:layout_marginBottom="4dp"/>
 
-            <com.google.android.material.floatingactionbutton.FloatingActionButton
-                android:id="@+id/btnCapturePhoto"
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:boxBackgroundColor="#f3f4ed"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxStrokeColor="#2D5A27"
+                app:endIconMode="custom"
+                app:endIconDrawable="@drawable/ic_search">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etPlantSpecies"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Buscar especie..." />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="none"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="16dp">
+
+                <com.google.android.material.chip.ChipGroup
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:singleLine="true">
+
+                    <com.google.android.material.chip.Chip
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Monstera"
+                        app:chipBackgroundColor="#A3B18A"
+                        android:textColor="#FFFFFF"/>
+                    <com.google.android.material.chip.Chip
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Suculenta"
+                        app:chipBackgroundColor="#e2e3dc"
+                        android:textColor="#42493e"/>
+                    <com.google.android.material.chip.Chip
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Cactus"
+                        app:chipBackgroundColor="#e2e3dc"
+                        android:textColor="#42493e"/>
+                </com.google.android.material.chip.ChipGroup>
+            </HorizontalScrollView>
+
+            <!-- UBICACIÓN -->
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:text="Ubicación"
+                android:textColor="#42493e"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"/>
+
+            <GridLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:columnCount="2"
+                android:rowCount="2"
+                android:layout_marginBottom="16dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnLocSalon"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="60dp"
+                    android:layout_columnWeight="1"
+                    android:layout_marginEnd="8dp"
+                    android:text="Salón"
+                    android:textColor="#191c18"
+                    app:strokeColor="#2D5A27"
+                    app:strokeWidth="2dp"
+                    app:backgroundTint="#FFFFFF"
+                    app:cornerRadius="16dp"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnLocDormitorio"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="60dp"
+                    android:layout_columnWeight="1"
+                    android:layout_marginStart="8dp"
+                    android:text="Dormitorio"
+                    android:textColor="#191c18"
+                    app:backgroundTint="#f3f4ed"
+                    app:cornerRadius="16dp"
+                    app:strokeWidth="0dp"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnLocTerraza"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="60dp"
+                    android:layout_columnWeight="1"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginTop="8dp"
+                    android:text="Terraza"
+                    android:textColor="#191c18"
+                    app:strokeColor="#2D5A27"
+                    app:strokeWidth="2dp"
+                    app:backgroundTint="#FFFFFF"
+                    app:cornerRadius="16dp"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnLocCocina"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="60dp"
+                    android:layout_columnWeight="1"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="8dp"
+                    android:text="Cocina"
+                    android:textColor="#191c18"
+                    app:backgroundTint="#f3f4ed"
+                    app:cornerRadius="16dp"
+                    app:strokeWidth="0dp"/>
+            </GridLayout>
+
+            <!-- ÚLTIMO RIEGO -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Último Riego"
+                android:textColor="#42493e"
+                android:textStyle="bold"
+                android:layout_marginBottom="4dp"/>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="32dp"
+                app:boxBackgroundColor="#f3f4ed"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxStrokeColor="#2D5A27">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etLastWatered"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:focusable="false"
+                    android:clickable="true"
+                    android:hint="DD/MM/AAAA" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- GUARDAR -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSavePlant"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:text="Guardar Planta"
+                android:textSize="16sp"
                 app:backgroundTint="#2D5A27"
-                app:tint="#FFFFFF"
-                android:src="@drawable/ic_launcher_foreground"
-                app:elevation="4dp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                android:layout_marginEnd="-8dp"
-                android:layout_marginBottom="-8dp"/>
-        </androidx.constraintlayout.widget.ConstraintLayout>
+                app:cornerRadius="30dp"
+                android:layout_marginBottom="16dp"/>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Nombre de la Planta"
-            android:textColor="#42493e"
-            android:textStyle="bold"
-            android:layout_marginBottom="4dp"/>
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:boxBackgroundColor="#f3f4ed"
-            app:boxCornerRadiusTopStart="12dp"
-            app:boxCornerRadiusTopEnd="12dp"
-            app:boxStrokeColor="#2D5A27"
-            app:endIconMode="custom"
-            app:endIconDrawable="@drawable/ic_search"> <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/etPlantName"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Ej: Sr. Helecho"
-            android:inputType="textCapWords" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Especie"
-            android:textColor="#42493e"
-            android:textStyle="bold"
-            android:layout_marginBottom="4dp"/>
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:boxBackgroundColor="#f3f4ed"
-            app:boxCornerRadiusTopStart="12dp"
-            app:boxCornerRadiusTopEnd="12dp"
-            app:boxStrokeColor="#2D5A27"
-            app:endIconMode="custom"
-            app:endIconDrawable="@drawable/ic_search">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etPlantSpecies"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Buscar especie..." />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <HorizontalScrollView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:scrollbars="none"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="16dp">
-
-            <com.google.android.material.chip.ChipGroup
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:singleLine="true">
-
-                <com.google.android.material.chip.Chip
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Monstera"
-                    app:chipBackgroundColor="#A3B18A"
-                    android:textColor="#FFFFFF"/>
-                <com.google.android.material.chip.Chip
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Suculenta"
-                    app:chipBackgroundColor="#e2e3dc"
-                    android:textColor="#42493e"/>
-                <com.google.android.material.chip.Chip
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Cactus"
-                    app:chipBackgroundColor="#e2e3dc"
-                    android:textColor="#42493e"/>
-            </com.google.android.material.chip.ChipGroup>
-        </HorizontalScrollView>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Ubicación"
-            android:textColor="#42493e"
-            android:textStyle="bold"
-            android:layout_marginBottom="8dp"/>
-
-        <GridLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:columnCount="2"
-            android:layout_marginBottom="16dp">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnLocSalon"
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                android:layout_width="0dp"
-                android:layout_height="60dp"
-                android:layout_columnWeight="1"
-                android:layout_marginEnd="8dp"
-                android:text="Salón"
-                android:textColor="#191c18"
-                app:strokeColor="#2D5A27"
-                app:strokeWidth="2dp"
-                app:backgroundTint="#FFFFFF"
-                app:cornerRadius="16dp"/>
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnLocDormitorio"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:layout_width="0dp"
-                android:layout_height="60dp"
-                android:layout_columnWeight="1"
-                android:layout_marginStart="8dp"
-                android:text="Dormitorio"
-                android:textColor="#191c18"
-                app:backgroundTint="#f3f4ed"
-                app:cornerRadius="16dp"/>
-
-        </GridLayout>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Último Riego"
-            android:textColor="#42493e"
-            android:textStyle="bold"
-            android:layout_marginBottom="4dp"/>
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="32dp"
-            app:boxBackgroundColor="#f3f4ed"
-            app:boxCornerRadiusTopStart="12dp"
-            app:boxCornerRadiusTopEnd="12dp"
-            app:boxStrokeColor="#2D5A27">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etLastWatered"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:focusable="false"
-                android:clickable="true"
-                android:hint="DD/MM/AAAA" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnSavePlant"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:text="Guardar Planta"
-            android:textSize="16sp"
-            app:backgroundTint="#2D5A27"
-            app:cornerRadius="30dp"
-            android:layout_marginBottom="40dp"/>
-
-    </LinearLayout>
-</androidx.core.widget.NestedScrollView>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>
