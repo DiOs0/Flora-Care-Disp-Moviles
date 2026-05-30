@@ -17,4 +17,17 @@
     <color name="gris_natural">#757872</color>
     <color name="gris_linea">#D9D9D9</color>
     <color name="negro_suave">#1E1E1E</color>
+
+    <!-- Paleta oficial FloraCare -->
+    <color name="cream_bg">#FFFCF2</color>
+    <color name="forest_green">#2D4A27</color>
+    <color name="forest_dark">#1B331E</color>
+    <color name="pale_green">#E8EFE6</color>
+    <color name="alert_red">#E05345</color>
+    <color name="text_slate">#203622</color>
+
+    <!-- Originales compatibles -->
+
+    <color name="personalizado">#FF5714</color>
+    <color name="login">#03045e</color>
 </resources>

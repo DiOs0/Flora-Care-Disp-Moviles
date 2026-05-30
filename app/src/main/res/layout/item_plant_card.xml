@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="6dp"
+    app:cardCornerRadius="24dp"
+    app:strokeWidth="1.2dp"
+    app:strokeColor="#EEF2EC"
+    app:cardBackgroundColor="@color/white"
+    app:cardElevation="1dp">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="12dp">
+
+        <!-- Imagen de la Planta -->
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/imgPlantPhoto"
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:src="@android:drawable/sym_def_app_icon"
+            android:scaleType="centerCrop"
+             />
+
+        <!-- Alerta Badge Circular de Riego (Rojo si necesita, verde si está OK) -->
+        <FrameLayout
+            android:id="@+id/badgeLayout"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_alignParentEnd="true"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp">
+
+            <View
+                android:id="@+id/badgeBackground"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/circle_alert_red" />
+
+            <ImageView
+                android:id="@+id/badgeIcon"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_gravity="center"
+                android:src="@android:drawable/ic_menu_compass"
+                app:tint="@color/white" />
+        </FrameLayout>
+
+        <!-- Especie / Nombre Científico -->
+        <TextView
+            android:id="@+id/txtPlantSpecies"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/imgPlantPhoto"
+            android:layout_marginTop="10dp"
+            android:text="MONSTERA DELICIOSA"
+            android:textColor="#8C9C8A"
+            android:textSize="9sp"
+            android:textStyle="bold"
+            android:ellipsize="end"
+            android:singleLine="true" />
+
+        <!-- Apodo de la Planta -->
+        <TextView
+            android:id="@+id/txtPlantName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/txtPlantSpecies"
+            android:text="Monty"
+            android:textColor="@color/forest_dark"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:ellipsize="end"
+            android:singleLine="true" />
+
+        <!-- Iconos de Características al Pie -->
+        <LinearLayout
+            android:id="@+id/layoutFeatureIcons"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/txtPlantName"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:background="@drawable/circle_icon_gray"
+                android:src="@android:drawable/btn_star"
+                android:padding="3dp"
+                android:layout_marginEnd="4dp" />
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:background="@drawable/circle_icon_gray"
+                android:src="@android:drawable/ic_dialog_info"
+                android:padding="3dp" />
+        </LinearLayout>
+
+    </RelativeLayout>
+</com.google.android.material.card.MaterialCardView>
