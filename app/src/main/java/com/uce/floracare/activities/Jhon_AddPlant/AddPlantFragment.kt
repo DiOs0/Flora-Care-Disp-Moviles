@@ -1,13 +1,21 @@
 package com.uce.floracare.activities.Jhon_AddPlant
 
+import android.app.Activity
 import android.app.DatePickerDialog
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Camera
 import android.os.Bundle
+import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
-import com.uce.floracare.databinding.FragmentAddPlantBinding // Cambia al paquete de tu app
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.uce.floracare.databinding.FragmentAddPlantBinding
 import java.util.Calendar
 
 
@@ -20,9 +28,9 @@ class AddPlantFragment : Fragment() {
     // Variable para guardar la ubicacion seleccionada temporalmente
     private var selectedLocation : String = "Salon"
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-    }
+
+    private lateinit var cameraManager : CameraManager
+
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -36,13 +44,44 @@ class AddPlantFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        initUI()
+
+
         initListeners()
     }
 
-    private fun initUI(){}
+
 
     private fun initListeners() {
+
+        // cerrar app
+
+        binding.closeFromAddPlant.setOnClickListener {
+
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Cerrar sesion")
+                .setMessage("¿Esta seguro de salir de la aplicacion?")
+                .setCancelable(true)
+                .setPositiveButton("Si"){
+                        dialog , id ->
+                    val intent = Intent(requireContext(), Login::class.java)
+                    startActivity(intent)
+                }
+                .setNegativeButton("No"){
+                        dialog, id -> dialog.dismiss()
+                }.setNeutralButton("Cancelar"){
+                        dialog, id -> dialog.dismiss()
+                }
+                .show()
+        }
+
+        cameraManager = CameraManager(this) { uri ->
+            if (uri != null) {
+                binding.imgPlantPhoto.setImageURI(uri) // Mostramos la foto
+            } else {
+                Toast.makeText(requireContext(), "Captura cancelada", Toast.LENGTH_SHORT).show()
+            }
+        }
+
 
         // CALENDARIO
         binding.etLastWatered.setOnClickListener {
@@ -51,8 +90,11 @@ class AddPlantFragment : Fragment() {
 
         // BOTON DE LA CAMARA
         binding.btnCapturePhoto.setOnClickListener {
-            Toast.makeText(requireContext(), "Abrir camara...", Toast.LENGTH_SHORT)
-            // TODO: hacer un Intenet para acceder a la camara
+            cameraManager.openCamera(requireContext())
+        }
+
+        binding.imgPlantPhoto.setOnClickListener {
+            cameraManager.openCamera(requireContext())
         }
 
         // SELECCION DE UBICACION
@@ -82,6 +124,14 @@ class AddPlantFragment : Fragment() {
             savePlantData()
         }
     }
+
+
+    /*
+    METODO PARA INGRESAR A LA CAMARA
+     */
+
+
+
 
     private fun showDatePickerDialog() {
         val calendar = Calendar.getInstance()
@@ -137,7 +187,20 @@ class AddPlantFragment : Fragment() {
 
 
     private fun updateLocationSelection(view: View) {
-        // Aquí se puede agregar lógica para cambiar el estado visual de los botones
+        val buttons = listOf(
+            binding.btnLocSalon,
+            binding.btnLocTerraza,
+            binding.btnLocCocina,
+            binding.btnLocDormitorio
+        )
+
+        buttons.forEach { button ->
+            val isSelected = button.id == view.id
+            button.strokeWidth = if (isSelected) 2 else 0
+            button.backgroundTintList = android.content.res.ColorStateList.valueOf(
+                if (isSelected) android.graphics.Color.parseColor("#f3f4ed") else android.graphics.Color.WHITE
+            )
+        }
     }
 
     override fun onDestroyView() {

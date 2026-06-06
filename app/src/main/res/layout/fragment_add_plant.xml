@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F8F9F5">
+    android:background="@color/accent_green">
 
     <!-- HEADER: Fijo en la parte superior -->
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -20,7 +20,7 @@
             android:id="@+id/ic_leaf"
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:src="@drawable/ic_launcher_foreground"
+            android:src="@drawable/ic_logo"
             app:tint="#2D5A27"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
@@ -39,10 +39,12 @@
             app:layout_constraintBottom_toBottomOf="parent"/>
 
         <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/close_from_add_plant"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="#e7e9e1"
             app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"
+            android:src="@drawable/close_add_plant"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"/>
@@ -85,7 +87,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="FOTO DE LA PLANTA"
-                    android:textSize="12sp"
+                    android:textSize="15sp"
                     android:textStyle="bold"
                     android:textColor="#72796e"
                     app:layout_constraintTop_toTopOf="parent"
@@ -99,7 +101,7 @@
                     android:layout_height="wrap_content"
                     app:backgroundTint="#2D5A27"
                     app:tint="#FFFFFF"
-                    android:src="@drawable/ic_launcher_foreground"
+                    android:src="@drawable/camera_add_plant"
                     app:elevation="4dp"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
@@ -111,6 +113,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:textSize="17sp"
                 android:text="Nombre de la Planta"
                 android:textColor="#42493e"
                 android:textStyle="bold"
@@ -125,13 +128,14 @@
                 app:boxCornerRadiusTopEnd="12dp"
                 app:boxStrokeColor="#2D5A27"
                 app:endIconMode="custom"
-                app:endIconDrawable="@drawable/ic_search">
+                app:endIconDrawable="@drawable/ic_logo">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etPlantName"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Ej: Sr. Helecho"
+                    android:textSize="17sp"
                     android:inputType="textCapWords" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -141,6 +145,7 @@
                 android:layout_height="wrap_content"
                 android:text="Especie"
                 android:textColor="#42493e"
+                android:textSize="17sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="4dp"/>
 
@@ -152,13 +157,14 @@
                 app:boxCornerRadiusTopEnd="12dp"
                 app:boxStrokeColor="#2D5A27"
                 app:endIconMode="custom"
-                app:endIconDrawable="@drawable/ic_search">
+                app:endIconDrawable="@drawable/ic_logo">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etPlantSpecies"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Buscar especie..." />
+                    android:hint="Buscar especie..."
+                    android:textSize="17sp"/>
             </com.google.android.material.textfield.TextInputLayout>
 
             <HorizontalScrollView
@@ -174,20 +180,26 @@
                     app:singleLine="true">
 
                     <com.google.android.material.chip.Chip
+                        android:id="@+id/especie_monstera"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:textSize="17sp"
                         android:text="Monstera"
                         app:chipBackgroundColor="#A3B18A"
                         android:textColor="#FFFFFF"/>
                     <com.google.android.material.chip.Chip
+                        android:id="@+id/escape_suculenta"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:textSize="17sp"
                         android:text="Suculenta"
                         app:chipBackgroundColor="#e2e3dc"
                         android:textColor="#42493e"/>
                     <com.google.android.material.chip.Chip
+                        android:id="@+id/especie_cactus"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:textSize="17sp"
                         android:text="Cactus"
                         app:chipBackgroundColor="#e2e3dc"
                         android:textColor="#42493e"/>
@@ -199,6 +211,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Ubicación"
+                android:textSize="17sp"
                 android:textColor="#42493e"
                 android:textStyle="bold"
                 android:layout_marginBottom="8dp"/>
@@ -218,10 +231,11 @@
                     android:layout_columnWeight="1"
                     android:layout_marginEnd="8dp"
                     android:text="Salón"
+                    android:textSize="17sp"
                     android:textColor="#191c18"
                     app:strokeColor="#2D5A27"
                     app:strokeWidth="2dp"
-                    app:backgroundTint="#FFFFFF"
+                    app:backgroundTint="#f3f4ed"
                     app:cornerRadius="16dp"/>
 
                 <com.google.android.material.button.MaterialButton
@@ -230,12 +244,13 @@
                     android:layout_width="0dp"
                     android:layout_height="60dp"
                     android:layout_columnWeight="1"
+                    android:textSize="17sp"
                     android:layout_marginStart="8dp"
                     android:text="Dormitorio"
                     android:textColor="#191c18"
                     app:backgroundTint="#f3f4ed"
                     app:cornerRadius="16dp"
-                    app:strokeWidth="0dp"/>
+                    app:strokeWidth="2dp"/>
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnLocTerraza"
@@ -245,6 +260,7 @@
                     android:layout_columnWeight="1"
                     android:layout_marginEnd="8dp"
                     android:layout_marginTop="8dp"
+                    android:textSize="17sp"
                     android:text="Terraza"
                     android:textColor="#191c18"
                     app:strokeColor="#2D5A27"
@@ -261,10 +277,11 @@
                     android:layout_marginStart="8dp"
                     android:layout_marginTop="8dp"
                     android:text="Cocina"
+                    android:textSize="17sp"
                     android:textColor="#191c18"
                     app:backgroundTint="#f3f4ed"
                     app:cornerRadius="16dp"
-                    app:strokeWidth="0dp"/>
+                    app:strokeWidth="2dp"/>
             </GridLayout>
 
             <!-- ÚLTIMO RIEGO -->
@@ -272,6 +289,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Último Riego"
+                android:textSize="17sp"
                 android:textColor="#42493e"
                 android:textStyle="bold"
                 android:layout_marginBottom="4dp"/>
@@ -300,7 +318,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
                 android:text="Guardar Planta"
-                android:textSize="16sp"
+                android:textSize="20sp"
                 app:backgroundTint="#2D5A27"
                 app:cornerRadius="30dp"
                 android:layout_marginBottom="16dp"/>

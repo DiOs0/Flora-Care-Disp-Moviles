@@ -7,7 +7,6 @@ import androidx.fragment.app.Fragment
 import com.uce.floracare.R
 import com.uce.floracare.databinding.ActivityMainBinding
 import com.uce.floracare.activities.AuxiliarFragment
-import com.uce.floracare.activities.Jhon_AddPlant.AddPlantActivity
 import com.uce.floracare.activities.Jhon_AddPlant.AddPlantFragment
 import com.uce.floracare.activities.Milan_Ajustes.AjustesFragment
 import com.uce.floracare.activities.Osorio_Explore.ExploreFragment
