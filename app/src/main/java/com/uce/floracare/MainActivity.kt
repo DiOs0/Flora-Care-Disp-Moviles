@@ -27,7 +27,7 @@ class MainActivity : AppCompatActivity() {
         binding.bottomNavigation.setOnItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.nav_jardin->{
-                    loadFragment(AuxiliarFragment())
+                    loadFragment(MiJardinFragment())
                     true
                 }
                 R.id.nav_explorar -> {

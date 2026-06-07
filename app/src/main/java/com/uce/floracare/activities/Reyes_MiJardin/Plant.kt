@@ -1,4 +1,4 @@
-package com.uce.floracare.activities.Osorio_Explore
+package com.uce.floracare.activities.Reyes_MiJardin
 
 import android.R
 import androidx.annotation.DrawableRes
@@ -13,4 +13,7 @@ data class Plant(
     @DrawableRes val imagenRes: Int,
     val esDestacada: Boolean,
 
+    //Prueba para MiJardin
+    val necesitaAgua : Boolean,
+    val imageUrl : String
 )
