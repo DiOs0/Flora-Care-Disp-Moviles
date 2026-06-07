@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.uce.floracare.R
+import com.uce.floracare.activities.Jhon_AddPlant.AddPlantFragment
 import com.uce.floracare.databinding.FragmentExploreBinding
 
 class ExploreFragment : Fragment() {
@@ -35,8 +36,8 @@ class ExploreFragment : Fragment() {
 
         val featuredPlants = plants.filter { it.esDestacada }
 
-        val featuredAdapter = FeaturedAdapter { }
-        val catalogAdapter = ExploreAdapter { }
+        val featuredAdapter = FeaturedAdapter { plant -> navigateToAddPlant(plant) }
+        val catalogAdapter = ExploreAdapter { plant -> navigateToAddPlant(plant) }
 
         binding.rvFeaturedPlants.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
         binding.rvFeaturedPlants.adapter = featuredAdapter
@@ -46,6 +47,14 @@ class ExploreFragment : Fragment() {
         binding.rvCatalogPlants.adapter = catalogAdapter
         binding.rvCatalogPlants.setHasFixedSize(true)
         catalogAdapter.submitList(plants)
+    }
+
+    private fun navigateToAddPlant(plant: Plant) {
+        val fragment = AddPlantFragment.newInstance(plant.nombre)
+        requireActivity().supportFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, fragment)
+            .addToBackStack("explore")
+            .commit()
     }
 
     override fun onDestroyView() {

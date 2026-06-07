@@ -21,6 +21,19 @@ import java.util.Calendar
 
 class AddPlantFragment : Fragment() {
 
+    // === METODOS Osorio_Explore - INICIO ===
+    companion object {
+        private const val ARG_PLANT_NAME = "plant_name_osorio"
+        fun newInstance(plantName: String? = null): AddPlantFragment {
+            val fragment = AddPlantFragment()
+            val args = Bundle()
+            args.putString(ARG_PLANT_NAME, plantName)
+            fragment.arguments = args
+            return fragment
+        }
+    }
+    // === METODOS Osorio_Explore - FIN ===
+
     private var _binding : FragmentAddPlantBinding? = null
     // Se pone '!!' para que no sea NULO
     private val binding get() = _binding!!
@@ -44,7 +57,11 @@ class AddPlantFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-
+        // === METODOS Osorio_Explore - INICIO ===
+        arguments?.getString(ARG_PLANT_NAME)?.let { name ->
+            binding.etPlantName.setText(name)
+        }
+        // === METODOS Osorio_Explore - FIN ===
 
         initListeners()
     }

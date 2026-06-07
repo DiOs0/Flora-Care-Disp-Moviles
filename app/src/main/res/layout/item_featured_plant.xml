@@ -39,10 +39,10 @@
             android:paddingBottom="6dp"
             android:text="Tropical"
             android:textColor="@color/primary_green"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/ivPlantImage" />
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/ivPlantImage" />
 
         <TextView
             android:id="@+id/tvPlantName"
@@ -51,8 +51,8 @@
             android:layout_marginTop="10dp"
             android:text="Monstera"
             android:textColor="@color/text_dark"
-            android:textSize="18sp"
-            android:textStyle="bold"
+                android:textSize="20sp"
+                android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tvPlantTag" />
@@ -64,7 +64,7 @@
             android:layout_marginTop="8dp"
             android:text="Luz indirecta"
             android:textColor="@color/text_gray"
-            android:textSize="13sp"
+            android:textSize="15sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tvPlantName" />
@@ -76,7 +76,7 @@
             android:layout_marginTop="4dp"
             android:text="1 vez/semana"
             android:textColor="@color/text_gray"
-            android:textSize="13sp"
+            android:textSize="15sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tvPlantLight" />

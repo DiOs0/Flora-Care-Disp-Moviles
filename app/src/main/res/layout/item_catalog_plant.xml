@@ -35,7 +35,7 @@
             android:layout_marginEnd="8dp"
             android:text="Monstera"
             android:textColor="@color/text_dark"
-            android:textSize="16sp"
+            android:textSize="18sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toStartOf="@id/ivCatalogArrow"
             app:layout_constraintStart_toEndOf="@id/ivCatalogPlantImage"
@@ -50,7 +50,7 @@
             android:layout_marginEnd="8dp"
             android:text="Monstera deliciosa"
             android:textColor="@color/text_gray"
-            android:textSize="12sp"
+            android:textSize="14sp"
             app:layout_constraintEnd_toStartOf="@id/ivCatalogArrow"
             app:layout_constraintStart_toEndOf="@id/ivCatalogPlantImage"
             app:layout_constraintTop_toBottomOf="@id/tvCatalogPlantName" />
@@ -77,7 +77,7 @@
                 android:paddingBottom="4dp"
                 android:text="Tropical"
                 android:textColor="@color/primary_green"
-                android:textSize="11sp"
+                android:textSize="13sp"
                 android:textStyle="bold" />
 
         </LinearLayout>
@@ -91,7 +91,7 @@
             android:layout_marginEnd="8dp"
             android:text="Luz indirecta"
             android:textColor="@color/text_gray"
-            android:textSize="12sp"
+            android:textSize="14sp"
             app:layout_constraintEnd_toStartOf="@id/ivCatalogArrow"
             app:layout_constraintStart_toEndOf="@id/ivCatalogPlantImage"
             app:layout_constraintTop_toBottomOf="@id/tagContainer" />
@@ -105,7 +105,7 @@
             android:layout_marginEnd="8dp"
             android:text="1 vez/semana"
             android:textColor="@color/text_gray"
-            android:textSize="12sp"
+            android:textSize="14sp"
             app:layout_constraintEnd_toStartOf="@id/ivCatalogArrow"
             app:layout_constraintStart_toEndOf="@id/ivCatalogPlantImage"
             app:layout_constraintTop_toBottomOf="@id/tvCatalogPlantLight" />
