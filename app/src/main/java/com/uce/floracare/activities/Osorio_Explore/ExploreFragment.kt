@@ -63,6 +63,20 @@ class ExploreFragment : Fragment() {
         binding.btnSeedData.setOnClickListener {
             fetchAndUploadPlant()
         }
+
+        binding.btnUploadId.setOnClickListener {
+            val idText = binding.etManualId.text.toString().trim()
+            if (idText.isEmpty()) {
+                binding.etManualId.error = "Ingresa un ID"
+                return@setOnClickListener
+            }
+            val id = idText.toIntOrNull()
+            if (id == null || id <= 0) {
+                binding.etManualId.error = "ID inválido"
+                return@setOnClickListener
+            }
+            uploadPlantById(id)
+        }
     }
 
     private fun fetchAndUploadPlant() {
@@ -71,6 +85,14 @@ class ExploreFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             try {
+                val existingIds = withContext(Dispatchers.IO) {
+                    firestoreManager.getExistingIds()
+                }
+
+                while (existingIds.contains(currentPlantId)) {
+                    currentPlantId++
+                }
+
                 val response = withContext(Dispatchers.IO) {
                     apiService.getPlantDetails(currentPlantId)
                 }
@@ -107,6 +129,52 @@ class ExploreFragment : Fragment() {
             } finally {
                 binding.progressBar.visibility = View.GONE
                 binding.btnSeedData.isEnabled = true
+            }
+        }
+    }
+
+    private fun uploadPlantById(id: Int) {
+        binding.progressBar.visibility = View.VISIBLE
+        binding.btnUploadId.isEnabled = false
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val response = withContext(Dispatchers.IO) {
+                    apiService.getPlantDetails(id)
+                }
+
+                val entity = response.toPlantEntity()
+
+                val result = withContext(Dispatchers.IO) {
+                    firestoreManager.uploadPlant(entity)
+                }
+
+                result.fold(
+                    onSuccess = {
+                        Toast.makeText(
+                            requireContext(),
+                            "✓ Planta #$id subida: ${entity.nombreComun}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        binding.etManualId.text.clear()
+                    },
+                    onFailure = { error ->
+                        Toast.makeText(
+                            requireContext(),
+                            "✗ Error al subir #$id: ${error.message}",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                )
+            } catch (e: Exception) {
+                Toast.makeText(
+                    requireContext(),
+                    "✗ Error en API (ID $id): ${e.message}",
+                    Toast.LENGTH_LONG
+                ).show()
+            } finally {
+                binding.progressBar.visibility = View.GONE
+                binding.btnUploadId.isEnabled = true
             }
         }
     }

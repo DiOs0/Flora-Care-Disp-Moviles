@@ -35,4 +35,13 @@ class FirestoreManager {
             Result.failure(e)
         }
     }
+
+    suspend fun getExistingIds(): Set<Int> = withContext(Dispatchers.IO) {
+        try {
+            val snapshot = plantsRef.get().await()
+            snapshot.documents.mapNotNull { it.id.toIntOrNull() }.toSet()
+        } catch (e: Exception) {
+            emptySet()
+        }
+    }
 }
