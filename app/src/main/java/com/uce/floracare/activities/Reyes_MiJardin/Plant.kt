@@ -1,6 +1,5 @@
 package com.uce.floracare.activities.Reyes_MiJardin
 
-import android.R
 import androidx.annotation.DrawableRes
 
 data class Plant(
@@ -14,6 +13,6 @@ data class Plant(
     val esDestacada: Boolean,
 
     //Prueba para MiJardin
-    val necesitaAgua : Boolean,
-    val imageUrl : String
+    val necesitaAgua: Boolean,
+    val imageUrl: Int // Representa la referencia R.string que almacena la URL de la planta
 )

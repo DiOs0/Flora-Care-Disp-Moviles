@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
+import com.uce.floracare.R
 import com.uce.floracare.databinding.ActivityMiJardinBinding
 import com.uce.floracare.activities.adapters.PlantAdapter
 import com.uce.floracare.activities.Reyes_MiJardin.Plant
@@ -38,12 +39,32 @@ class MiJardinFragment : Fragment() {
         binding.rvPlants.layoutManager = GridLayoutManager(requireContext(), 2)
         binding.rvPlants.adapter = adapter
 
-        // 3. Mock Data de plantas (con el nuevo modelo de Osorio_Explore)
+        // 3. Mock Data de plantas (con tu nuevo modelo real y referencias R.string)
         val plantList = listOf(
-            Plant(1, "Aloe Vera", "Aloe barbadensis", "Suculenta", "Sol directo", "Bajo", android.R.drawable.sym_def_app_icon, true, true, "https://images.unsplash.com/photo-1596547613931-98b64093990e?w=500&auto=format&fit=crop&q=80"),
-            Plant(2, "Lirio de Paz", "Spathiphyllum", "Interior", "Sombra", "Medio", android.R.drawable.sym_def_app_icon, false, false, "https://images.unsplash.com/photo-1593696954577-ab3d39317b97?w=500&auto=format&fit=crop&q=80"),
-            Plant(3, "Sansevieria", "Sansevieria trifasciata", "Rústica", "Semisombra", "Muy bajo", android.R.drawable.sym_def_app_icon, true, true, "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=500&auto=format&fit=crop&q=80"),
-            Plant(4, "Costilla de Adán", "Monstera deliciosa", "Tropical", "Luz indirecta", "Medio", android.R.drawable.sym_def_app_icon, false, false, "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=500&auto=format&fit=crop&q=80")
+            Plant(
+                id = 1,
+                nombre = "Anturio Blanco",
+                nombreCientifico = "Anthurium andraeanum",
+                tipo = "Interior",
+                luz = "Sombra parcial",
+                riego = "Frequent",
+                imagenRes = android.R.drawable.sym_def_app_icon,
+                esDestacada = true,
+                necesitaAgua = true,
+                imageUrl = R.drawable.perennial
+            ),
+            Plant(
+                id = 2,
+                nombre = "Sansevieria",
+                nombreCientifico = "Sansevieria trifasciata",
+                tipo = "Rústicas",
+                luz = "Semisombra",
+                riego = "Rare",
+                imagenRes = android.R.drawable.sym_def_app_icon,
+                esDestacada = false,
+                necesitaAgua = false,
+                imageUrl = R.drawable.save
+            )
         )
 
         // 4. Enviar los datos al adaptador usando ListAdapter.submitList()
