@@ -36,6 +36,25 @@ class FirestoreManager {
         }
     }
 
+
+    suspend fun getPlants(): Result<List<PlantEntity>> =
+        withContext(Dispatchers.IO) {
+            try {
+
+                val snapshot = plantsRef.get().await()
+
+                val plants = snapshot.documents.mapNotNull {
+                    it.toObject(PlantEntity::class.java)
+                }
+
+                Result.success(plants)
+
+            } catch (e: Exception) {
+
+                Result.failure(e)
+
+            }
+        }
     suspend fun getExistingIds(): Set<Int> = withContext(Dispatchers.IO) {
         try {
             val snapshot = plantsRef.get().await()
