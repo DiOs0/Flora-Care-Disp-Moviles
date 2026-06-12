@@ -4,15 +4,27 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.uce.floracare.R
 import com.uce.floracare.activities.Jhon_AddPlant.AddPlantFragment
+import com.uce.floracare.api_ingreso.data.FirestoreManager
+import com.uce.floracare.api_ingreso.data.toPlantEntity
 import com.uce.floracare.databinding.FragmentExploreBinding
+import com.uce.floracare.api_ingreso.network.PerenualApiService
+import com.uce.floracare.api_ingreso.network.RetrofitClient
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class ExploreFragment : Fragment() {
     private var _binding: FragmentExploreBinding? = null
     private val binding get() = _binding!!
+    private val firestoreManager = FirestoreManager()
+    private val apiService = RetrofitClient.instance.create(PerenualApiService::class.java)
+    private var currentPlantId = 1
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -47,6 +59,56 @@ class ExploreFragment : Fragment() {
         binding.rvCatalogPlants.adapter = catalogAdapter
         binding.rvCatalogPlants.setHasFixedSize(true)
         catalogAdapter.submitList(plants)
+
+        binding.btnSeedData.setOnClickListener {
+            fetchAndUploadPlant()
+        }
+    }
+
+    private fun fetchAndUploadPlant() {
+        binding.progressBar.visibility = View.VISIBLE
+        binding.btnSeedData.isEnabled = false
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val response = withContext(Dispatchers.IO) {
+                    apiService.getPlantDetails(currentPlantId)
+                }
+
+                val entity = response.toPlantEntity()
+
+                val result = withContext(Dispatchers.IO) {
+                    firestoreManager.uploadPlant(entity)
+                }
+
+                result.fold(
+                    onSuccess = {
+                        Toast.makeText(
+                            requireContext(),
+                            "✓ Planta #$currentPlantId subida: ${entity.nombreComun}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        currentPlantId++
+                    },
+                    onFailure = { error ->
+                        Toast.makeText(
+                            requireContext(),
+                            "✗ Error al subir: ${error.message}",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                )
+            } catch (e: Exception) {
+                Toast.makeText(
+                    requireContext(),
+                    "✗ Error en API (ID $currentPlantId): ${e.message}",
+                    Toast.LENGTH_LONG
+                ).show()
+            } finally {
+                binding.progressBar.visibility = View.GONE
+                binding.btnSeedData.isEnabled = true
+            }
+        }
     }
 
     private fun navigateToAddPlant(plant: Plant) {
