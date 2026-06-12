@@ -36,18 +36,25 @@ class PlantAdapter(
         fun bind(plant: Plant) {
             val context = itemView.context
 
-            // Mostrar nombre y especie de la planta adaptados del modelo en español
+            // Mostrar nombre y especie de la planta adaptados del modelo real en español
             binding.txtPlantName.text = plant.nombre
             binding.txtPlantSpecies.text = plant.nombreCientifico.uppercase()
 
             // Cargar imagen de forma remota o local
-            if (plant.imageUrl.isNotEmpty()) {
-                Glide.with(context)
-                    .load(plant.imageUrl)
-                    .placeholder(android.R.drawable.sym_def_app_icon)
-                    .error(android.R.drawable.sym_def_app_icon)
-                    .into(binding.imgPlantPhoto)
-            } else {
+            try {
+                // Obtener el string de la URL desde la referencia R.string
+                val urlString = context.getString(plant.imageUrl)
+                if (urlString.isNotEmpty() && urlString.startsWith("http")) {
+                    Glide.with(context)
+                        .load(urlString)
+                        .placeholder(android.R.drawable.sym_def_app_icon)
+                        .error(android.R.drawable.sym_def_app_icon)
+                        .into(binding.imgPlantPhoto)
+                } else {
+                    binding.imgPlantPhoto.setImageResource(plant.imagenRes)
+                }
+            } catch (e: Exception) {
+                // Fallback local si el ID de recurso no es válido o está vacío
                 binding.imgPlantPhoto.setImageResource(plant.imagenRes)
             }
 
@@ -76,7 +83,7 @@ class PlantAdapter(
 }
 
 
-// MODELO DE DATOS - Guardar como app/src/main/java/com/uce/floracare/activities/Osorio_Explore/Plant.kt
+// MODELO DE DATOS REAL - Guardar como app/src/main/java/com/uce/floracare/activities/Osorio_Explore/Plant.kt
 /*
 package com.uce.floracare.activities.Osorio_Explore
 
@@ -94,6 +101,6 @@ data class Plant(
 
     //Prueba para MiJardin
     val necesitaAgua : Boolean,
-    val imageUrl : String // En tu modelo pusiste R.string; para Glide, usar el tipo String permite pasar links directos a internet.
+    val imageUrl : Int // En Kotlin, los recursos R.string compilados en Android representan IDs numéricos de tipo Int
 )
 */
