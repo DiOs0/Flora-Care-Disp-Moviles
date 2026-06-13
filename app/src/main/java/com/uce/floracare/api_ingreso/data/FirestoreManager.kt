@@ -36,25 +36,54 @@ class FirestoreManager {
         }
     }
 
-
-    suspend fun getPlants(): Result<List<PlantEntity>> =
+    suspend fun getPlants(limit: Int = 0): Result<List<PlantEntity>> =
         withContext(Dispatchers.IO) {
             try {
-
-                val snapshot = plantsRef.get().await()
-
+                val query = if (limit > 0) plantsRef.limit(limit.toLong()) else plantsRef
+                val snapshot = query.get().await()
                 val plants = snapshot.documents.mapNotNull {
                     it.toObject(PlantEntity::class.java)
                 }
-
                 Result.success(plants)
-
             } catch (e: Exception) {
-
                 Result.failure(e)
-
             }
         }
+
+    suspend fun getPlantsByCategory(category: String, limit: Int = 10): Result<List<PlantEntity>> =
+        withContext(Dispatchers.IO) {
+            try {
+                val snapshot = plantsRef
+                    .whereEqualTo("tipo", category)
+                    .limit(limit.toLong())
+                    .get()
+                    .await()
+                val plants = snapshot.documents.mapNotNull {
+                    it.toObject(PlantEntity::class.java)
+                }
+                Result.success(plants)
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+
+    suspend fun getPlantsByIndoor(indoor: Boolean, limit: Int = 10): Result<List<PlantEntity>> =
+        withContext(Dispatchers.IO) {
+            try {
+                val snapshot = plantsRef
+                    .whereEqualTo("caracteristicas.indoor", indoor)
+                    .limit(limit.toLong())
+                    .get()
+                    .await()
+                val plants = snapshot.documents.mapNotNull {
+                    it.toObject(PlantEntity::class.java)
+                }
+                Result.success(plants)
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+
     suspend fun getExistingIds(): Set<Int> = withContext(Dispatchers.IO) {
         try {
             val snapshot = plantsRef.get().await()

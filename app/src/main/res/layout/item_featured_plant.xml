@@ -16,33 +16,17 @@
         android:layout_height="match_parent"
         android:padding="12dp">
 
-        <ImageView
+        <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/ivPlantImage"
             android:layout_width="0dp"
-            android:layout_height="130dp"
+            android:layout_height="140dp"
             android:scaleType="centerCrop"
-            android:src="@drawable/ic_launcher_foreground"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            tools:ignore="ContentDescription" />
-
-        <TextView
-            android:id="@+id/tvPlantTag"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:background="@drawable/bg_tag_pill"
-            android:paddingStart="10dp"
-            android:paddingTop="6dp"
-            android:paddingEnd="10dp"
-            android:paddingBottom="6dp"
-            android:text="Tropical"
-            android:textColor="@color/primary_green"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/ivPlantImage" />
+            app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.FloraCare.Rounded"
+            tools:ignore="ContentDescription"
+            tools:src="@drawable/ic_launcher_foreground" />
 
         <TextView
             android:id="@+id/tvPlantName"
@@ -51,35 +35,59 @@
             android:layout_marginTop="10dp"
             android:text="Monstera"
             android:textColor="@color/text_dark"
-                android:textSize="20sp"
-                android:textStyle="bold"
+            android:textSize="20sp"
+            android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvPlantTag" />
+            app:layout_constraintTop_toBottomOf="@id/ivPlantImage" />
 
         <TextView
-            android:id="@+id/tvPlantLight"
+            android:id="@+id/tvPlantScientific"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Luz indirecta"
+            android:layout_marginTop="2dp"
+            android:text="Monstera deliciosa"
             android:textColor="@color/text_gray"
-            android:textSize="15sp"
+            android:textSize="13sp"
+            android:textStyle="italic"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tvPlantName" />
 
         <TextView
-            android:id="@+id/tvPlantWater"
-            android:layout_width="0dp"
+            android:id="@+id/tvPlantTag"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="1 vez/semana"
-            android:textColor="@color/text_gray"
-            android:textSize="15sp"
-            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_tag_pill"
+            android:paddingStart="10dp"
+            android:paddingTop="4dp"
+            android:paddingEnd="10dp"
+            android:paddingBottom="4dp"
+            android:text="Interior"
+            android:textColor="@color/primary_green"
+            android:textSize="13sp"
+            android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvPlantLight" />
+            app:layout_constraintTop_toBottomOf="@id/tvPlantScientific"
+            tools:text="Interior" />
+
+        <TextView
+            android:id="@+id/tvPlantCareLevel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:paddingStart="10dp"
+            android:paddingTop="4dp"
+            android:paddingEnd="12dp"
+            android:paddingBottom="4dp"
+            android:text="Medio"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvPlantTag"
+            tools:background="@color/care_medium_bg"
+            tools:textColor="@color/care_medium" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

@@ -30,4 +30,12 @@
 
     <color name="personalizado">#FF5714</color>
     <color name="login">#03045e</color>
+
+    <!-- Niveles de cuidado -->
+    <color name="care_low">#4CAF50</color>
+    <color name="care_medium">#FF9800</color>
+    <color name="care_high">#F44336</color>
+    <color name="care_low_bg">#E8F5E9</color>
+    <color name="care_medium_bg">#FFF3E0</color>
+    <color name="care_high_bg">#FFEBEE</color>
 </resources>

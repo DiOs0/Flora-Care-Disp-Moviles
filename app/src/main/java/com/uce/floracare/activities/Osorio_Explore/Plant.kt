@@ -1,16 +1,23 @@
 package com.uce.floracare.activities.Osorio_Explore
 
-import android.R
-import androidx.annotation.DrawableRes
+import com.uce.floracare.api_ingreso.data.PlantEntity
 
 data class Plant(
     val id: Int,
     val nombre: String,
     val nombreCientifico: String,
-    val tipo: String,
-    val luz: String,
-    val riego: String,
-    @DrawableRes val imagenRes: Int,
-    val esDestacada: Boolean,
-
+    val indoor: Boolean,
+    val nivelCuidado: String,
+    val imagenUrl: String,
 )
+
+fun PlantEntity.toExplorePlant(): Plant {
+    return Plant(
+        id = id,
+        nombre = nombreComun,
+        nombreCientifico = nombreCientifico,
+        indoor = caracteristicas.indoor,
+        nivelCuidado = nivelCuidado,
+        imagenUrl = imagen
+    )
+}

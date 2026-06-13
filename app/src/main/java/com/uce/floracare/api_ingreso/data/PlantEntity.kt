@@ -5,21 +5,27 @@ import com.google.firebase.firestore.PropertyName
 data class PlantEntity(
     val id: Int = 0,
     @get:PropertyName("nombre_comun")
+    @field:PropertyName("nombre_comun")
     val nombreComun: String = "",
     @get:PropertyName("nombre_cientifico")
+    @field:PropertyName("nombre_cientifico")
     val nombreCientifico: String = "",
     val imagen: String = "",
     val tipo: String = "",
     val descripcion: String = "",
     @get:PropertyName("ciclo_vida")
+    @field:PropertyName("ciclo_vida")
     val cicloVida: String = "",
     @get:PropertyName("nivel_cuidado")
+    @field:PropertyName("nivel_cuidado")
     val nivelCuidado: String = "",
     val caracteristicas: Caracteristicas = Caracteristicas(),
     val riego: Riego = Riego(),
     @get:PropertyName("luz_solar")
+    @field:PropertyName("luz_solar")
     val luzSolar: List<String> = emptyList(),
     @get:PropertyName("Temperatura")
+    @field:PropertyName("Temperatura")
     val temperatura: Temperatura = Temperatura()
 )
 
@@ -28,16 +34,20 @@ data class Caracteristicas(
     val indoor: Boolean = false,
     val tropical: Boolean = false,
     @get:PropertyName("resistente_sequia")
+    @field:PropertyName("resistente_sequia")
     val resistenteSequia: Boolean = false,
     @get:PropertyName("toxica_humanos")
+    @field:PropertyName("toxica_humanos")
     val toxicaHumanos: Boolean = false,
     @get:PropertyName("toxica_mascotas")
+    @field:PropertyName("toxica_mascotas")
     val toxicaMascotas: Boolean = false
 )
 
 data class Riego(
     val frecuencia: String = "",
     @get:PropertyName("cadaValor")
+    @field:PropertyName("cadaValor")
     val cadaValor: String = ""
 )
 
