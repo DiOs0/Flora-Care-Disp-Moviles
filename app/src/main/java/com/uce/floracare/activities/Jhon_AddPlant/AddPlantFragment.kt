@@ -17,6 +17,7 @@ import androidx.fragment.app.Fragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.uce.floracare.databinding.FragmentAddPlantBinding
 import java.util.Calendar
+import androidx.core.graphics.toColorInt
 
 
 class AddPlantFragment : Fragment() {
@@ -115,27 +116,17 @@ class AddPlantFragment : Fragment() {
         }
 
         // SELECCION DE UBICACION
-        binding.btnLocSalon.setOnClickListener {
-            selectedLocation = "Salón"
-            Toast.makeText(requireContext(), "Ubicación: Salón", Toast.LENGTH_SHORT).show()
+        binding.btnInterior.setOnClickListener {
+            selectedLocation = "Interior"
+            Toast.makeText(requireContext(), "Ubicación: Interior", Toast.LENGTH_SHORT).show()
             updateLocationSelection(it)
         }
-        binding.btnLocTerraza.setOnClickListener {
-            selectedLocation = "Terraza"
-            Toast.makeText(requireContext(), "Ubicación: Terraza", Toast.LENGTH_SHORT).show()
-            updateLocationSelection(it)
-        }
-        binding.btnLocCocina.setOnClickListener {
-            selectedLocation = "Cocina"
-            Toast.makeText(requireContext(), "Ubicación: Cocina", Toast.LENGTH_SHORT).show()
+        binding.btnExterior.setOnClickListener {
+            selectedLocation = "Exterior"
+            Toast.makeText(requireContext(), "Ubicación: Exterior", Toast.LENGTH_SHORT).show()
             updateLocationSelection(it)
         }
 
-        binding.btnLocDormitorio.setOnClickListener {
-            selectedLocation = "Dormitorio"
-            Toast.makeText(requireContext(), "Ubicación: Dormitorio", Toast.LENGTH_SHORT).show()
-            updateLocationSelection(it)
-        }
 
         binding.btnSavePlant.setOnClickListener {
             savePlantData()
@@ -205,17 +196,16 @@ class AddPlantFragment : Fragment() {
 
     private fun updateLocationSelection(view: View) {
         val buttons = listOf(
-            binding.btnLocSalon,
-            binding.btnLocTerraza,
-            binding.btnLocCocina,
-            binding.btnLocDormitorio
+            binding.btnInterior,
+            binding.btnExterior
         )
 
         buttons.forEach { button ->
             val isSelected = button.id == view.id
+
             button.strokeWidth = if (isSelected) 2 else 0
             button.backgroundTintList = android.content.res.ColorStateList.valueOf(
-                if (isSelected) android.graphics.Color.parseColor("#f3f4ed") else android.graphics.Color.WHITE
+                if (isSelected) "#f3f4ed".toColorInt() else android.graphics.Color.WHITE
             )
         }
     }

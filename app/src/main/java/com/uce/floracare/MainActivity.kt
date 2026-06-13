@@ -4,10 +4,11 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.navigation.findNavController
 import com.uce.floracare.R
 import com.uce.floracare.databinding.ActivityMainBinding
 import com.uce.floracare.activities.AuxiliarFragment
-import com.uce.floracare.activities.Jhon_AddPlant.AddPlantFragment
+import com.uce.floracare.activities.Jhon_AddPlant.test.TestFragment
 import com.uce.floracare.activities.Milan_Ajustes.AjustesFragment
 import com.uce.floracare.activities.Osorio_Explore.ExploreFragment
 
@@ -36,7 +37,7 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 R.id.nav_add -> {
-                    loadFragment(AddPlantFragment())
+                    loadFragment(TestFragment())
                     true
                 }
 

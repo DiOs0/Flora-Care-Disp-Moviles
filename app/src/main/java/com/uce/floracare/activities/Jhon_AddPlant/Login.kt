@@ -37,7 +37,7 @@ class Login : AppCompatActivity() {
 
             // Logica de autenticacion
 
-            if(email == "admin" && password == "admin") {
+            if(email == "a" && password == "a") {
 
                 msg = "Usuario autentificado correctamente"
 

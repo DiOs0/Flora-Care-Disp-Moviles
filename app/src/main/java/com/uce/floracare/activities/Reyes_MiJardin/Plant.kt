@@ -4,6 +4,7 @@ import com.uce.floracare.api_ingreso.data.PlantEntity
 import androidx.annotation.DrawableRes
 
 data class Plant(
+
     val id: Int,
     val nombre: String,
     val nombreCientifico: String,
