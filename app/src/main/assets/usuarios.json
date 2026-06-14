@@ -1,0 +1,13 @@
+[
+  {
+    "id": "user_001",
+    "nombre": "Mariel Milan",
+    "correo": "elizabeth@gmail.com",
+    "fotoPerfil": "https://lh3.googleusercontent.com/a/ACg8ocIRWpHEd3bji9Zh7IQQraZlym6nbPX_3-rAjAHuNtX2nuE9k3TLeg=s360-c-no",
+
+    "preferencias": {
+      "recordatoriosRiego": true,
+      "notificacionesCatalogo": false
+    }
+  }
+]

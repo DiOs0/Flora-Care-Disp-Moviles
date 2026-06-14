@@ -81,7 +81,7 @@
                         android:layout_height="90dp">
 
                         <com.google.android.material.imageview.ShapeableImageView
-                            android:layout_width="90dp"
+                            android:id="@+id/imgPerfil"                            android:layout_width="90dp"
                             android:layout_height="90dp"
                             android:src="@drawable/baseline_person_24"
                             android:scaleType="centerCrop"
@@ -97,6 +97,7 @@
                     </FrameLayout>
 
                     <TextView
+                        android:id="@+id/tvNombre"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Elena Martínez"
@@ -106,6 +107,7 @@
                         android:layout_marginTop="14dp"/>
 
                     <TextView
+                        android:id="@+id/tvCorreo"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="elena.garden@floracare.com"
@@ -171,6 +173,7 @@
                         </LinearLayout>
 
                         <com.google.android.material.switchmaterial.SwitchMaterial
+                            android:id="@+id/switchRiego"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:checked="true"
@@ -178,41 +181,41 @@
                             app:trackTint="@color/switch_track"/>
                     </LinearLayout>
 
-                    <!-- ITEM -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="18dp"
-                        android:gravity="center_vertical">
+<!--                    &lt;!&ndash; ITEM &ndash;&gt;-->
+<!--                    <LinearLayout-->
+<!--                        android:layout_width="match_parent"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:layout_marginTop="18dp"-->
+<!--                        android:gravity="center_vertical">-->
 
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
+<!--                        <LinearLayout-->
+<!--                            android:layout_width="0dp"-->
+<!--                            android:layout_height="wrap_content"-->
+<!--                            android:layout_weight="1"-->
+<!--                            android:orientation="vertical">-->
 
-                            <TextView
-                                android:text="Fertilización"
-                                android:textStyle="bold"
-                                android:textColor="#2D5A27"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"/>
+<!--                            <TextView-->
+<!--                                android:text="Fertilización"-->
+<!--                                android:textStyle="bold"-->
+<!--                                android:textColor="#2D5A27"-->
+<!--                                android:layout_width="wrap_content"-->
+<!--                                android:layout_height="wrap_content"/>-->
 
-                            <TextView
-                                android:text="Ciclos de nutrientes orgánicos"
-                                android:textSize="12sp"
-                                android:textColor="#757872"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"/>
-                        </LinearLayout>
+<!--                            <TextView-->
+<!--                                android:text="Ciclos de nutrientes orgánicos"-->
+<!--                                android:textSize="12sp"-->
+<!--                                android:textColor="#757872"-->
+<!--                                android:layout_width="wrap_content"-->
+<!--                                android:layout_height="wrap_content"/>-->
+<!--                        </LinearLayout>-->
 
-                        <com.google.android.material.switchmaterial.SwitchMaterial
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:checked="true"
-                            app:thumbTint="@color/switch_thumb"
-                            app:trackTint="@color/switch_track"/>
-                    </LinearLayout>
+<!--                        <com.google.android.material.switchmaterial.SwitchMaterial-->
+<!--                            android:layout_width="wrap_content"-->
+<!--                            android:layout_height="wrap_content"-->
+<!--                            android:checked="true"-->
+<!--                            app:thumbTint="@color/switch_thumb"-->
+<!--                            app:trackTint="@color/switch_track"/>-->
+<!--                    </LinearLayout>-->
 
                     <!-- ITEM -->
                     <LinearLayout
@@ -243,6 +246,7 @@
                         </LinearLayout>
 
                         <com.google.android.material.switchmaterial.SwitchMaterial
+                            android:id="@+id/switchCatalogo"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:checked="false"
@@ -505,6 +509,7 @@
 
             <!-- BOTÓN -->
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnCerrarSesion"
                 android:layout_width="match_parent"
                 android:layout_height="54dp"
                 android:layout_marginTop="24dp"
