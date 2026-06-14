@@ -3,7 +3,10 @@ package com.uce.floracare.activities.Osorio_Explore
 import com.uce.floracare.api_ingreso.data.PlantEntity
 
 data class Plant(
+
+
     val id: Int,
+
     val nombre: String,
     val nombreCientifico: String,
     val indoor: Boolean,

@@ -1,48 +1,57 @@
 package com.uce.floracare.activities.Jhon_AddPlant
 
-import android.app.Activity
+import android.Manifest
 import android.app.DatePickerDialog
-import android.content.ActivityNotFoundException
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.Camera
+import android.graphics.Color
+import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.uce.floracare.api_ingreso.data.StorageManager
 import com.uce.floracare.databinding.FragmentAddPlantBinding
+import kotlinx.coroutines.launch
 import java.util.Calendar
+import androidx.core.graphics.toColorInt
+import androidx.core.view.isVisible
 
 
 class AddPlantFragment : Fragment() {
 
-    // === METODOS Osorio_Explore - INICIO ===
-    companion object {
-        private const val ARG_PLANT_NAME = "plant_name_osorio"
-        fun newInstance(plantName: String? = null): AddPlantFragment {
-            val fragment = AddPlantFragment()
-            val args = Bundle()
-            args.putString(ARG_PLANT_NAME, plantName)
-            fragment.arguments = args
-            return fragment
-        }
-    }
-    // === METODOS Osorio_Explore - FIN ===
 
-    private var _binding : FragmentAddPlantBinding? = null
-    // Se pone '!!' para que no sea NULO
+    private var _binding: FragmentAddPlantBinding? = null
     private val binding get() = _binding!!
 
-    // Variable para guardar la ubicacion seleccionada temporalmente
-    private var selectedLocation : String = "Salon"
+    // Instanciamos nuestro CameraManager
+    private lateinit var cameraManager: CameraManager
+    private lateinit var storageManager: StorageManager
+
+    // Variable para guardar temporalmente la foto capturada
+    private var photoUri: Uri? = null
+
+    private var selectedLocation: String = "Interior"
 
 
-    private lateinit var cameraManager : CameraManager
+    // Registramos el contrato para pedir permisos de cámara
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            binding.viewFinder.isVisible = true
+            cameraManager.startCamera(viewLifecycleOwner, binding.viewFinder)
+        } else {
+            Toast.makeText(requireContext(), "Se requiere permiso de cámara para registrar la planta", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+
 
 
     override fun onCreateView(
@@ -57,11 +66,24 @@ class AddPlantFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // === METODOS Osorio_Explore - INICIO ===
-        arguments?.getString(ARG_PLANT_NAME)?.let { name ->
-            binding.etPlantName.setText(name)
+        // Recuperar datos pasados desde ExploreFragment
+        arguments?.let {
+            val name = it.getString(ARG_PLANT_NAME)
+            val species = it.getString(ARG_PLANT_SPECIES)
+            val isIndoor = it.getBoolean(ARG_IS_INDOOR, true) // Por defecto true
+            
+            if (!name.isNullOrBlank()) binding.etPlantName.setText(name)
+            if (!species.isNullOrBlank()) binding.etPlantSpecies.setText(species)
+            
+            selectedLocation = if (isIndoor) "Interior" else "Exterior"
         }
-        // === METODOS Osorio_Explore - FIN ===
+
+        // Inicializamos el manager
+        cameraManager = CameraManager(requireContext())
+        storageManager = StorageManager(requireContext())
+
+        // Inicializar el estado visual de los botones de ubicación según lo seleccionado
+        updateLocationSelection(if (selectedLocation == "Interior") binding.btnInterior else binding.btnExterior)
 
         initListeners()
     }
@@ -91,13 +113,6 @@ class AddPlantFragment : Fragment() {
                 .show()
         }
 
-        cameraManager = CameraManager(this) { uri ->
-            if (uri != null) {
-                binding.imgPlantPhoto.setImageURI(uri) // Mostramos la foto
-            } else {
-                Toast.makeText(requireContext(), "Captura cancelada", Toast.LENGTH_SHORT).show()
-            }
-        }
 
 
         // CALENDARIO
@@ -107,35 +122,29 @@ class AddPlantFragment : Fragment() {
 
         // BOTON DE LA CAMARA
         binding.btnCapturePhoto.setOnClickListener {
-            cameraManager.openCamera(requireContext())
+            if (binding.viewFinder.isVisible) {
+                capturePhoto()
+            } else {
+                requestPermissionLauncher.launch(Manifest.permission.CAMERA)
+            }
         }
 
         binding.imgPlantPhoto.setOnClickListener {
-            cameraManager.openCamera(requireContext())
+            requestPermissionLauncher.launch(Manifest.permission.CAMERA)
         }
 
         // SELECCION DE UBICACION
-        binding.btnLocSalon.setOnClickListener {
-            selectedLocation = "Salón"
-            Toast.makeText(requireContext(), "Ubicación: Salón", Toast.LENGTH_SHORT).show()
+        binding.btnInterior.setOnClickListener {
+            selectedLocation = "Interior"
+            Toast.makeText(requireContext(), "Ubicación: Interior", Toast.LENGTH_SHORT).show()
             updateLocationSelection(it)
         }
-        binding.btnLocTerraza.setOnClickListener {
-            selectedLocation = "Terraza"
-            Toast.makeText(requireContext(), "Ubicación: Terraza", Toast.LENGTH_SHORT).show()
-            updateLocationSelection(it)
-        }
-        binding.btnLocCocina.setOnClickListener {
-            selectedLocation = "Cocina"
-            Toast.makeText(requireContext(), "Ubicación: Cocina", Toast.LENGTH_SHORT).show()
+        binding.btnExterior.setOnClickListener {
+            selectedLocation = "Exterior"
+            Toast.makeText(requireContext(), "Ubicación: Exterior", Toast.LENGTH_SHORT).show()
             updateLocationSelection(it)
         }
 
-        binding.btnLocDormitorio.setOnClickListener {
-            selectedLocation = "Dormitorio"
-            Toast.makeText(requireContext(), "Ubicación: Dormitorio", Toast.LENGTH_SHORT).show()
-            updateLocationSelection(it)
-        }
 
         binding.btnSavePlant.setOnClickListener {
             savePlantData()
@@ -149,6 +158,20 @@ class AddPlantFragment : Fragment() {
 
 
 
+
+    private fun capturePhoto() {
+        cameraManager.takePhoto(
+            onPhotoSaved = { uri ->
+                binding.viewFinder.isVisible = false
+                binding.imgPlantPhoto.setImageURI(uri)
+                photoUri = uri
+                Toast.makeText(requireContext(), "Foto capturada con éxito", Toast.LENGTH_SHORT).show()
+            },
+            onError = { _ ->
+                Toast.makeText(requireContext(), "Error al tomar foto", Toast.LENGTH_SHORT).show()
+            }
+        )
+    }
 
     private fun showDatePickerDialog() {
         val calendar = Calendar.getInstance()
@@ -185,37 +208,68 @@ class AddPlantFragment : Fragment() {
             return
         }
 
-        // Crear el objeto (Aquí luego usarás tu DTO real en lugar de un Toast)
-        val summary = """
-            Planta: $plantName
-            Especie: $plantSpecies
-            Ubicación: $selectedLocation
-            Último Riego: $lastWatered
-        """.trimIndent()
+        if (photoUri == null) {
+            Toast.makeText(requireContext(), "Por favor, captura una foto de la planta", Toast.LENGTH_SHORT).show()
+            return
+        }
 
-        Toast.makeText(requireContext(), "Planta Guardada:\n$summary", Toast.LENGTH_LONG).show()
+        // Mostrar cargando y desactivar botón
+        setLoadingState(true)
 
-        // TODO: Enviar el DTO a la base de datos o ViewModel
+        lifecycleScope.launch {
+            // 1. Subir imagen a Firebase Storage
+            val uploadResult = storageManager.uploadUserPlantImage(photoUri!!)
 
-        // TODO: Navegar hacia atrás usando Jetpack Navigation
-        // findNavController().popBackStack()
+            uploadResult.fold(
+                onSuccess = { downloadUrl ->
+                    // 2. Imagen subida con éxito
+                    setLoadingState(false)
+                    
+                    val summary = """
+                        Planta: $plantName
+                        Especie: $plantSpecies
+                        Ubicación: $selectedLocation
+                        Último Riego: $lastWatered
+                        URL Imagen: $downloadUrl
+                    """.trimIndent()
+
+                    Toast.makeText(requireContext(), "Planta Guardada y Foto Subida:\n$summary", Toast.LENGTH_LONG).show()
+                    
+                    // TODO: Guardar en Firestore usando el downloadUrl
+                    // TODO: findNavController().popBackStack()
+                },
+                onFailure = { error ->
+                    // 3. Error en la subida
+                    setLoadingState(false)
+                    val errorMessage = "Error al subir la imagen: ${error.localizedMessage ?: error.message}"
+                    Log.e("AddPlantFragment", errorMessage, error)
+                    Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_LONG).show()
+                }
+            )
+        }
+    }
+
+    private fun setLoadingState(loading: Boolean) {
+        binding.progressBar.isVisible = loading
+        binding.btnSavePlant.isEnabled = !loading
+        binding.btnCapturePhoto.isEnabled = !loading
     }
 
 
 
     private fun updateLocationSelection(view: View) {
         val buttons = listOf(
-            binding.btnLocSalon,
-            binding.btnLocTerraza,
-            binding.btnLocCocina,
-            binding.btnLocDormitorio
+            binding.btnInterior,
+            binding.btnExterior
         )
 
         buttons.forEach { button ->
             val isSelected = button.id == view.id
+
             button.strokeWidth = if (isSelected) 2 else 0
+            button.strokeColor = android.content.res.ColorStateList.valueOf("#2D5A27".toColorInt())
             button.backgroundTintList = android.content.res.ColorStateList.valueOf(
-                if (isSelected) android.graphics.Color.parseColor("#f3f4ed") else android.graphics.Color.WHITE
+                if (isSelected) "#f3f4ed".toColorInt() else Color.WHITE
             )
         }
     }
@@ -225,4 +279,19 @@ class AddPlantFragment : Fragment() {
         _binding = null
     }
 
+    companion object {
+        private const val ARG_PLANT_NAME = "plant_name"
+        private const val ARG_PLANT_SPECIES = "plant_species"
+        private const val ARG_IS_INDOOR = "is_indoor"
+
+        fun newInstance(name: String, species: String, isIndoor: Boolean): AddPlantFragment {
+            val fragment = AddPlantFragment()
+            val args = Bundle()
+            args.putString(ARG_PLANT_NAME, name)
+            args.putString(ARG_PLANT_SPECIES, species)
+            args.putBoolean(ARG_IS_INDOOR, isIndoor)
+            fragment.arguments = args
+            return fragment
+        }
+    }
 }

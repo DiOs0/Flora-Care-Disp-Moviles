@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.navigation.findNavController
 import com.uce.floracare.R
 import com.uce.floracare.databinding.ActivityMainBinding
 import com.uce.floracare.activities.AuxiliarFragment
@@ -20,8 +21,8 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         if (savedInstanceState == null) {
-            binding.bottomNavigation.selectedItemId = R.id.nav_explorar
-            loadFragment(ExploreFragment())
+            binding.bottomNavigation.selectedItemId = R.id.nav_jardin
+            loadFragment(MiJardinFragment())
         }
 
         binding.bottomNavigation.setOnItemSelectedListener { menuItem ->
@@ -50,9 +51,14 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun loadFragment(fragment: Fragment) {
+    fun loadFragment(fragment: Fragment) {
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_container, fragment)
+            .addToBackStack(null) // Permitir volver atrás
             .commit()
+    }
+
+    fun setSelectedMenuItem(itemId: Int) {
+        binding.bottomNavigation.selectedItemId = itemId
     }
 }

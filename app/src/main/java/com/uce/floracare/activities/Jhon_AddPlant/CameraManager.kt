@@ -3,54 +3,103 @@ package com.uce.floracare.activities.Jhon_AddPlant
 import android.content.Context
 import android.net.Uri
 import android.os.Environment
+import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageCapture
+import androidx.camera.core.ImageCaptureException
+import androidx.camera.core.Preview
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.lifecycle.LifecycleOwner
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class CameraManager (fragment: AddPlantFragment,
-    private val onPhotoCaptured : (Uri?) -> Unit )
+class CameraManager (private val context: Context) {
 
-{
 
-    // actual foto de la camara
-    private var currentPhotoUri: Uri? = null
+    // Objeto responsable de tomar y guardar la foto
+    private var imageCapture: ImageCapture? = null
 
-    // Esto se registra automáticamente cuando instancias e
-    private val takePhotoLauncher = fragment.registerForActivityResult(
-        ActivityResultContracts.TakePicture()
-    ) { isSuccess ->
-        if (isSuccess) {
-            onPhotoCaptured(currentPhotoUri) // ¡Éxito! Devolvemos la URI
-        } else {
-            onPhotoCaptured(null) // Cancelado o falló
-        }
+    /**
+     * Inicia la cámara y la vincula al ciclo de vida del Fragmento.
+     */
+    fun startCamera(lifecycleOwner: LifecycleOwner, previewView: PreviewView) {
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
+
+        cameraProviderFuture.addListener({
+            // Obtenemos el proveedor de la cámara
+            val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
+
+            // Configuramos la Vista Previa (lo que el usuario ve en pantalla)
+            val preview = Preview.Builder()
+                .build()
+                .also {
+                    it.setSurfaceProvider(previewView.surfaceProvider)
+                }
+
+            // Configuramos la captura de imagen
+            imageCapture = ImageCapture.Builder().build()
+
+            // Seleccionamos la cámara trasera por defecto
+            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+
+            try {
+                // Desvinculamos usos previos antes de vincular los nuevos
+                cameraProvider.unbindAll()
+
+                // Vinculamos la cámara al ciclo de vida
+                cameraProvider.bindToLifecycle(
+                    lifecycleOwner, cameraSelector, preview, imageCapture
+                )
+            } catch (exc: Exception) {
+                Log.e("CameraManager", "Error al vincular la cámara", exc)
+            }
+        }, ContextCompat.getMainExecutor(context))
     }
 
-    fun openCamera(context: Context) {
-        val photoFile = createImageFile(context)
-        photoFile?.let {
-            currentPhotoUri = FileProvider.getUriForFile(
-                context,
-                "${context.packageName}.fileprovider",
-                it
-            )
-            // Ya no armamos un Intent, solo le pasamos la URI al contrato
-            takePhotoLauncher.launch(currentPhotoUri)
-        }
-    }
+    /**
+     * Toma la foto y la guarda en la caché del dispositivo.
+     * Devuelve el Uri si es exitoso, o una Excepción si falla.
+     */
+    fun takePhoto(onPhotoSaved: (Uri) -> Unit, onError: (Exception) -> Unit) {
+        // Asegurarnos de que imageCapture esté inicializado
+        val imageCapture = imageCapture ?: return
 
+        // Creamos un archivo temporal en la memoria caché para no saturar la galería del usuario
+        val photoFile = File(
+            context.externalCacheDir,
+            SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(System.currentTimeMillis()) + ".jpg"
+        )
 
-    private fun createImageFile(context: Context): File? {
-        return try {
-            val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-            val storageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-            File.createTempFile("JPEG_${timeStamp}_", ".jpg", storageDir)
-        } catch (ex: Exception) {
-            null
-        }
+        // Opciones de salida para CameraX
+        val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
+
+        // Tomar la foto
+        imageCapture.takePicture(
+            outputOptions,
+            ContextCompat.getMainExecutor(context),
+            object : ImageCapture.OnImageSavedCallback {
+                override fun onError(exc: ImageCaptureException) {
+                    Log.e("CameraManager", "Error al capturar foto: ${exc.message}", exc)
+                    onError(exc)
+                }
+
+                override fun onImageSaved(output: ImageCapture.OutputFileResults) {
+                    // ¡Éxito! Usamos FileProvider para obtener una Uri segura
+                    val savedUri = FileProvider.getUriForFile(
+                        context,
+                        "${context.packageName}.fileprovider",
+                        photoFile
+                    )
+                    onPhotoSaved(savedUri)
+                }
+            }
+        )
     }
 
 

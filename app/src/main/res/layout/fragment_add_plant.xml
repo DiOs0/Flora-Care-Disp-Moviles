@@ -83,6 +83,12 @@
                     android:scaleType="centerCrop"
                     app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.ExtraLarge" />
 
+                <androidx.camera.view.PreviewView
+                    android:id="@+id/viewFinder"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:visibility="gone" />
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -135,6 +141,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Ej: Sr. Helecho"
+                    android:textColorHint="@color/black"
                     android:textSize="17sp"
                     android:inputType="textCapWords" />
             </com.google.android.material.textfield.TextInputLayout>
@@ -164,6 +171,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Buscar especie..."
+                    android:textColorHint="@color/black"
                     android:textSize="17sp"/>
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -224,13 +232,13 @@
                 android:layout_marginBottom="16dp">
 
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnLocSalon"
+                    android:id="@+id/btnInterior"
                     style="@style/Widget.Material3.Button.OutlinedButton"
                     android:layout_width="0dp"
                     android:layout_height="60dp"
                     android:layout_columnWeight="1"
                     android:layout_marginEnd="8dp"
-                    android:text="Salón"
+                    android:text="Interior"
                     android:textSize="17sp"
                     android:textColor="#191c18"
                     app:strokeColor="#2D5A27"
@@ -239,49 +247,20 @@
                     app:cornerRadius="16dp"/>
 
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnLocDormitorio"
+                    android:id="@+id/btnExterior"
                     style="@style/Widget.Material3.Button.OutlinedButton"
                     android:layout_width="0dp"
                     android:layout_height="60dp"
                     android:layout_columnWeight="1"
                     android:textSize="17sp"
                     android:layout_marginStart="8dp"
-                    android:text="Dormitorio"
+                    android:text="Exterior"
                     android:textColor="#191c18"
                     app:backgroundTint="#f3f4ed"
                     app:cornerRadius="16dp"
                     app:strokeWidth="2dp"/>
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnLocTerraza"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
-                    android:layout_width="0dp"
-                    android:layout_height="60dp"
-                    android:layout_columnWeight="1"
-                    android:layout_marginEnd="8dp"
-                    android:layout_marginTop="8dp"
-                    android:textSize="17sp"
-                    android:text="Terraza"
-                    android:textColor="#191c18"
-                    app:strokeColor="#2D5A27"
-                    app:strokeWidth="2dp"
-                    app:backgroundTint="#FFFFFF"
-                    app:cornerRadius="16dp"/>
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnLocCocina"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
-                    android:layout_width="0dp"
-                    android:layout_height="60dp"
-                    android:layout_columnWeight="1"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginTop="8dp"
-                    android:text="Cocina"
-                    android:textSize="17sp"
-                    android:textColor="#191c18"
-                    app:backgroundTint="#f3f4ed"
-                    app:cornerRadius="16dp"
-                    app:strokeWidth="2dp"/>
             </GridLayout>
 
             <!-- ÚLTIMO RIEGO -->
@@ -322,6 +301,15 @@
                 app:backgroundTint="#2D5A27"
                 app:cornerRadius="30dp"
                 android:layout_marginBottom="16dp"/>
+
+            <ProgressBar
+                android:id="@+id/progressBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:visibility="gone"
+                android:layout_marginBottom="16dp"
+                android:indeterminateTint="#2D5A27"/>
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

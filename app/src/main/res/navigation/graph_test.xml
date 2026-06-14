@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/graph_test"
+    app:startDestination="@id/testFragment">
+
+    <fragment
+        android:id="@+id/testFragment"
+        android:name="com.uce.floracare.activities.Jhon_AddPlant.test.TestFragment"
+        android:label="fragment_test"
+        tools:layout="@layout/fragment_test" >
+        <action
+            android:id="@+id/action_testFragment_to_showTestFragment"
+            app:destination="@id/showTestFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/showTestFragment"
+        android:name="com.uce.floracare.activities.Jhon_AddPlant.test.ShowTestFragment"
+        android:label="fragment_show_test"
+        tools:layout="@layout/fragment_show_test" >
+        <action
+            android:id="@+id/action_showTestFragment_to_testFragment"
+            app:destination="@id/testFragment" />
+    </fragment>
+</navigation>

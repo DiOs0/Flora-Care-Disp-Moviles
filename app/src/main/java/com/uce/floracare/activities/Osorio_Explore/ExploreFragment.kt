@@ -9,24 +9,20 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.uce.floracare.R
+import com.uce.floracare.activities.MainActivity
 import com.uce.floracare.activities.Jhon_AddPlant.AddPlantFragment
 import com.uce.floracare.api_ingreso.data.FirestoreManager
-import com.uce.floracare.api_ingreso.data.StorageManager
-import com.uce.floracare.api_ingreso.data.toPlantEntity
 import com.uce.floracare.databinding.FragmentExploreBinding
-import com.uce.floracare.api_ingreso.network.PerenualApiService
-import com.uce.floracare.api_ingreso.network.RetrofitClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+
+
 
 class ExploreFragment : Fragment() {
     private var _binding: FragmentExploreBinding? = null
     private val binding get() = _binding!!
     private val firestoreManager = FirestoreManager()
-    private val storageManager = StorageManager()
-    private val apiService = RetrofitClient.instance.create(PerenualApiService::class.java)
-    private var currentPlantId = 1
 
     private lateinit var featuredAdapter: PlantAdapter
     private lateinit var catalogAdapter: PlantAdapter
@@ -43,38 +39,47 @@ class ExploreFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        setupRecyclerViews()
+        setupChips()
+        loadData()
+    }
+
+    private fun setupRecyclerViews() {
         featuredAdapter = PlantAdapter(
-            onPlantClick = { plant -> navigateToAddPlant(plant) },
+            onPlantClick = { plant ->
+                navigateToDetail(plant)
+            },
             layoutRes = R.layout.item_featured_plant
         )
+
         catalogAdapter = PlantAdapter(
-            onPlantClick = { plant -> navigateToAddPlant(plant) },
+            onPlantClick = { plant ->
+                navigateToDetail(plant)
+            },
             layoutRes = R.layout.item_catalog_plant
         )
 
-        binding.rvFeaturedPlants.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
-        binding.rvFeaturedPlants.adapter = featuredAdapter
+        binding.rvFeaturedPlants.apply {
+            layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
+            adapter = featuredAdapter
+        }
 
-        binding.rvCatalogPlants.layoutManager = LinearLayoutManager(requireContext())
-        binding.rvCatalogPlants.adapter = catalogAdapter
+        binding.rvCatalogPlants.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = catalogAdapter
+        }
+    }
 
-        setupChips()
-        loadData()
+    private fun navigateToDetail(plant: Plant) {
+        val addPlantFragment = AddPlantFragment.newInstance(
+            name = plant.nombre,
+            species = plant.nombreCientifico,
+            isIndoor = plant.indoor
+        )
 
-        binding.btnSeedData.setOnClickListener { fetchAndUploadPlant() }
-
-        binding.btnUploadId.setOnClickListener {
-            val idText = binding.etManualId.text.toString().trim()
-            if (idText.isEmpty()) {
-                binding.etManualId.error = "Ingresa un ID"
-                return@setOnClickListener
-            }
-            val id = idText.toIntOrNull()
-            if (id == null || id <= 0) {
-                binding.etManualId.error = "ID inválido"
-                return@setOnClickListener
-            }
-            uploadPlantById(id)
+        (activity as? MainActivity)?.apply {
+            setSelectedMenuItem(R.id.nav_add)
+            loadFragment(addPlantFragment)
         }
     }
 
@@ -136,133 +141,6 @@ class ExploreFragment : Fragment() {
 
     private fun showLoading(show: Boolean) {
         binding.progressBar.visibility = if (show) View.VISIBLE else View.GONE
-        if (!show) {
-            binding.tvUploadStatus.visibility = View.GONE
-        }
-    }
-
-    private fun setUploadStatus(text: String) {
-        binding.tvUploadStatus.apply {
-            this.text = text
-            visibility = View.VISIBLE
-        }
-    }
-
-    private fun fetchAndUploadPlant() {
-        showLoading(true)
-        setUploadStatus("Obteniendo datos de la API...")
-        binding.btnSeedData.isEnabled = false
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                val existingIds = withContext(Dispatchers.IO) { firestoreManager.getExistingIds() }
-                while (existingIds.contains(currentPlantId)) { currentPlantId++ }
-
-                val response = withContext(Dispatchers.IO) { apiService.getPlantDetails(currentPlantId) }
-                var entity = response.toPlantEntity()
-
-                if (entity.imagen.isNotBlank()) {
-                    setUploadStatus("Descargando imagen...")
-                    val downloadResult = withContext(Dispatchers.IO) {
-                        storageManager.uploadPlantImage(currentPlantId, entity.imagen)
-                    }
-                    downloadResult.fold(
-                        onSuccess = { permanentUrl ->
-                            entity = entity.copy(imagen = permanentUrl)
-                            setUploadStatus("Subiendo a Firebase Storage...")
-                        },
-                        onFailure = { error ->
-                            setUploadStatus("Error en imagen, guardando sin ella...")
-                            entity = entity.copy(imagen = "")
-                        }
-                    )
-                } else {
-                    setUploadStatus("Guardando en Firestore...")
-                }
-
-                val result = withContext(Dispatchers.IO) { firestoreManager.uploadPlant(entity) }
-                result.fold(
-                    onSuccess = {
-                        setUploadStatus("")
-                        showLoading(false)
-                        Toast.makeText(requireContext(), "\u2713 Planta #$currentPlantId subida: ${entity.nombreComun}", Toast.LENGTH_SHORT).show()
-                        currentPlantId++
-                        loadData()
-                    },
-                    onFailure = { error ->
-                        setUploadStatus("Error: ${error.message}")
-                        Toast.makeText(requireContext(), "\u2717 Error al subir: ${error.message}", Toast.LENGTH_LONG).show()
-                    }
-                )
-            } catch (e: Exception) {
-                setUploadStatus("Error: ${e.message}")
-                Toast.makeText(requireContext(), "\u2717 Error en API (ID $currentPlantId): ${e.message}", Toast.LENGTH_LONG).show()
-            } finally {
-                showLoading(false)
-                binding.btnSeedData.isEnabled = true
-            }
-        }
-    }
-
-    private fun uploadPlantById(id: Int) {
-        showLoading(true)
-        setUploadStatus("Obteniendo datos de la API...")
-        binding.btnUploadId.isEnabled = false
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                val response = withContext(Dispatchers.IO) { apiService.getPlantDetails(id) }
-                var entity = response.toPlantEntity()
-
-                if (entity.imagen.isNotBlank()) {
-                    setUploadStatus("Descargando imagen...")
-                    val downloadResult = withContext(Dispatchers.IO) {
-                        storageManager.uploadPlantImage(id, entity.imagen)
-                    }
-                    downloadResult.fold(
-                        onSuccess = { permanentUrl ->
-                            entity = entity.copy(imagen = permanentUrl)
-                            setUploadStatus("Subiendo a Firebase Storage...")
-                        },
-                        onFailure = { error ->
-                            setUploadStatus("Error en imagen, guardando sin ella...")
-                            entity = entity.copy(imagen = "")
-                        }
-                    )
-                } else {
-                    setUploadStatus("Guardando en Firestore...")
-                }
-
-                val result = withContext(Dispatchers.IO) { firestoreManager.uploadPlant(entity) }
-                result.fold(
-                    onSuccess = {
-                        setUploadStatus("")
-                        showLoading(false)
-                        Toast.makeText(requireContext(), "\u2713 Planta #$id subida: ${entity.nombreComun}", Toast.LENGTH_SHORT).show()
-                        binding.etManualId.text.clear()
-                        loadData()
-                    },
-                    onFailure = { error ->
-                        setUploadStatus("Error: ${error.message}")
-                        Toast.makeText(requireContext(), "\u2717 Error al subir #$id: ${error.message}", Toast.LENGTH_LONG).show()
-                    }
-                )
-            } catch (e: Exception) {
-                setUploadStatus("Error: ${e.message}")
-                Toast.makeText(requireContext(), "\u2717 Error en API (ID $id): ${e.message}", Toast.LENGTH_LONG).show()
-            } finally {
-                showLoading(false)
-                binding.btnUploadId.isEnabled = true
-            }
-        }
-    }
-
-    private fun navigateToAddPlant(plant: Plant) {
-        val fragment = AddPlantFragment.newInstance(plant.nombre)
-        requireActivity().supportFragmentManager.beginTransaction()
-            .replace(R.id.fragment_container, fragment)
-            .addToBackStack("explore")
-            .commit()
     }
 
     override fun onDestroyView() {
