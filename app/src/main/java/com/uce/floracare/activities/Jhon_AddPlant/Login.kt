@@ -49,6 +49,7 @@ class Login : AppCompatActivity() {
                             val intent = Intent(this, MainActivity::class.java)
                             Toast.makeText(this, "Bienvenido: $userId", Toast.LENGTH_SHORT).show()
                             startActivity(intent)
+                            finish()
                         } else {
                             Toast.makeText(
                                 this,
