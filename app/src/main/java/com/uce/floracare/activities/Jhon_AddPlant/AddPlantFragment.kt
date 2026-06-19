@@ -13,11 +13,14 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.uce.floracare.api_ingreso.data.FirestoreManager
+import com.uce.floracare.api_ingreso.data.PlantRepository
 import com.uce.floracare.api_ingreso.data.StorageManager
 import com.uce.floracare.databinding.FragmentAddPlantBinding
-import kotlinx.coroutines.launch
 import java.util.Calendar
 import androidx.core.graphics.toColorInt
 import androidx.core.view.isVisible
@@ -29,14 +32,17 @@ class AddPlantFragment : Fragment() {
     private var _binding: FragmentAddPlantBinding? = null
     private val binding get() = _binding!!
 
-    // Instanciamos nuestro CameraManager
+    // Instanciamos nuestro CameraManager y ViewModel
     private lateinit var cameraManager: CameraManager
-    private lateinit var storageManager: StorageManager
 
-    // Variable para guardar temporalmente la foto capturada
-    private var photoUri: Uri? = null
-
-    private var selectedLocation: String = "Interior"
+    private val viewModel: AddPlantViewModel by viewModels {
+        object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                val repository = PlantRepository(FirestoreManager(), StorageManager(requireContext()))
+                return AddPlantViewModel(repository) as T
+            }
+        }
+    }
 
 
     // Registramos el contrato para pedir permisos de cámara
@@ -75,17 +81,39 @@ class AddPlantFragment : Fragment() {
             if (!name.isNullOrBlank()) binding.etPlantName.setText(name)
             if (!species.isNullOrBlank()) binding.etPlantSpecies.setText(species)
             
-            selectedLocation = if (isIndoor) "Interior" else "Exterior"
+            viewModel.selectedLocation = if (isIndoor) "Interior" else "Exterior"
         }
 
         // Inicializamos el manager
         cameraManager = CameraManager(requireContext())
-        storageManager = StorageManager(requireContext())
+
+        setupObservers()
 
         // Inicializar el estado visual de los botones de ubicación según lo seleccionado
-        updateLocationSelection(if (selectedLocation == "Interior") binding.btnInterior else binding.btnExterior)
+        updateLocationSelection(if (viewModel.selectedLocation == "Interior") binding.btnInterior else binding.btnExterior)
 
         initListeners()
+    }
+
+    private fun setupObservers() {
+        // Observamos el estado de carga
+        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+            setLoadingState(isLoading)
+        }
+
+        // Observamos si el guardado fue exitoso
+        viewModel.saveSuccess.observe(viewLifecycleOwner) { success ->
+            if (success) {
+                Toast.makeText(requireContext(), "¡Planta guardada con éxito!", Toast.LENGTH_SHORT).show()
+                // Regresar a la pantalla anterior o limpiar formulario
+                parentFragmentManager.popBackStack()
+            }
+        }
+
+        // Observamos mensajes de error
+        viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
+            Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
+        }
     }
 
 
@@ -135,13 +163,11 @@ class AddPlantFragment : Fragment() {
 
         // SELECCION DE UBICACION
         binding.btnInterior.setOnClickListener {
-            selectedLocation = "Interior"
-            Toast.makeText(requireContext(), "Ubicación: Interior", Toast.LENGTH_SHORT).show()
+            viewModel.selectedLocation = "Interior"
             updateLocationSelection(it)
         }
         binding.btnExterior.setOnClickListener {
-            selectedLocation = "Exterior"
-            Toast.makeText(requireContext(), "Ubicación: Exterior", Toast.LENGTH_SHORT).show()
+            viewModel.selectedLocation = "Exterior"
             updateLocationSelection(it)
         }
 
@@ -164,7 +190,7 @@ class AddPlantFragment : Fragment() {
             onPhotoSaved = { uri ->
                 binding.viewFinder.isVisible = false
                 binding.imgPlantPhoto.setImageURI(uri)
-                photoUri = uri
+                viewModel.selectedPhotoUri = uri
                 Toast.makeText(requireContext(), "Foto capturada con éxito", Toast.LENGTH_SHORT).show()
             },
             onError = { _ ->
@@ -192,61 +218,12 @@ class AddPlantFragment : Fragment() {
     }
 
     private fun savePlantData() {
-        // Recolectar datos de las vistas
         val plantName = binding.etPlantName.text.toString().trim()
         val plantSpecies = binding.etPlantSpecies.text.toString().trim()
         val lastWatered = binding.etLastWatered.text.toString().trim()
 
-        // Validaciones súper básicas
-        if (plantName.isEmpty()) {
-            binding.etPlantName.error = "Dale un nombre a tu planta"
-            return
-        }
-
-        if (plantSpecies.isEmpty()) {
-            binding.etPlantSpecies.error = "Ingresa la especie"
-            return
-        }
-
-        if (photoUri == null) {
-            Toast.makeText(requireContext(), "Por favor, captura una foto de la planta", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        // Mostrar cargando y desactivar botón
-        setLoadingState(true)
-
-        lifecycleScope.launch {
-            // 1. Subir imagen a Firebase Storage
-            val uploadResult = storageManager.uploadUserPlantImage(photoUri!!)
-
-            uploadResult.fold(
-                onSuccess = { downloadUrl ->
-                    // 2. Imagen subida con éxito
-                    setLoadingState(false)
-                    
-                    val summary = """
-                        Planta: $plantName
-                        Especie: $plantSpecies
-                        Ubicación: $selectedLocation
-                        Último Riego: $lastWatered
-                        URL Imagen: $downloadUrl
-                    """.trimIndent()
-
-                    Toast.makeText(requireContext(), "Planta Guardada y Foto Subida:\n$summary", Toast.LENGTH_LONG).show()
-                    
-                    // TODO: Guardar en Firestore usando el downloadUrl
-                    // TODO: findNavController().popBackStack()
-                },
-                onFailure = { error ->
-                    // 3. Error en la subida
-                    setLoadingState(false)
-                    val errorMessage = "Error al subir la imagen: ${error.localizedMessage ?: error.message}"
-                    Log.e("AddPlantFragment", errorMessage, error)
-                    Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_LONG).show()
-                }
-            )
-        }
+        // Delegamos la lógica de guardado al ViewModel
+        viewModel.savePlant(plantName, plantSpecies, lastWatered)
     }
 
     private fun setLoadingState(loading: Boolean) {

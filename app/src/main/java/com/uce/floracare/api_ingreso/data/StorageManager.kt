@@ -9,6 +9,7 @@ import com.google.firebase.storage.StorageException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import java.io.File
 import java.net.URL
 
 class StorageManager(private val context: Context) {
@@ -94,6 +95,34 @@ class StorageManager(private val context: Context) {
             Log.w("StorageManager", "Advertencia: No hay un usuario autenticado. La subida podría fallar según las reglas de seguridad.")
         } else {
             Log.d("StorageManager", "Usuario autenticado para la subida: ${user.uid}")
+        }
+    }
+
+    /**
+     * Guarda la imagen localmente en el almacenamiento interno de la app.
+     * Útil cuando Cloud Storage no está disponible (Plan Spark limitado).
+     */
+    suspend fun saveImageLocally(uri: Uri): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            val inputStream = context.contentResolver.openInputStream(uri)
+                ?: return@withContext Result.failure(Exception("No se pudo abrir el archivo original"))
+
+            // Crear un nombre único para el archivo
+            val fileName = "plant_${System.currentTimeMillis()}.jpg"
+            val destinationFile = File(context.filesDir, fileName)
+
+            inputStream.use { input ->
+                destinationFile.outputStream().use { output ->
+                    input.copyTo(output)
+                }
+            }
+
+            val localUri = Uri.fromFile(destinationFile).toString()
+            Log.d("StorageManager", "Imagen guardada localmente en: $localUri")
+            Result.success(localUri)
+        } catch (e: Exception) {
+            Log.e("StorageManager", "Error al guardar imagen localmente", e)
+            Result.failure(e)
         }
     }
 }

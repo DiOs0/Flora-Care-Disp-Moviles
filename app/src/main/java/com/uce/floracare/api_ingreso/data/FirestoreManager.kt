@@ -9,6 +9,17 @@ class FirestoreManager {
 
     private val db = FirebaseFirestore.getInstance()
     private val plantsRef = db.collection("plants")
+    private val userPlantsRef = db.collection("user_plants")
+
+    suspend fun uploadUserPlant(plant: PlantEntity): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            // Guardamos en la colección específica para el usuario
+            userPlantsRef.document(plant.id.toString()).set(plant).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 
     suspend fun uploadPlant(plant: PlantEntity): Result<Unit> = withContext(Dispatchers.IO) {
         try {
