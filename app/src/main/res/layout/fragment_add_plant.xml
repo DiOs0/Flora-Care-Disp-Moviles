@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/accent_green">
+    android:background="#F8F9F5">
 
     <!-- HEADER: Fijo en la parte superior -->
     <androidx.constraintlayout.widget.ConstraintLayout

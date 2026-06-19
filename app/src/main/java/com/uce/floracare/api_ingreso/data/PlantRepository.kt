@@ -26,13 +26,9 @@ class PlantRepository(
             // Si falla el guardado local, usamos una cadena vacía o una imagen por defecto
             val imageUrl = saveLocalResult.getOrDefault("")
 
-            // 2. Obtener IDs existentes para generar el siguiente ID secuencial
-            val existingIds = firestoreManager.getExistingIds()
-            val newId = (existingIds.maxOrNull() ?: 0) + 1
-
             // 3. Crear instancia de PlantEntity
             val plant = PlantEntity(
-                id = newId,
+                id = (System.currentTimeMillis() % Int.MAX_VALUE).toInt(), // ID temporal para el objeto
                 nombreComun = name,
                 nombreCientifico = species,
                 imagen = imageUrl, // Aquí guardamos la ruta local (file://...)
@@ -52,5 +48,12 @@ class PlantRepository(
             Log.e("PlantRepository", "Error en saveNewPlant", e)
             Result.failure(e)
         }
+    }
+
+    /**
+     * Obtiene la lista de plantas creadas por el usuario desde Firestore.
+     */
+    suspend fun getMyPlants(): Result<List<PlantEntity>> {
+        return firestoreManager.getUserPlants()
     }
 }

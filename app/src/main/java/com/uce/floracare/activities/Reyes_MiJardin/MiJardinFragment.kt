@@ -1,96 +1,95 @@
-package com.uce.floracare.activities
+package com.uce.floracare.activities.Reyes_MiJardin
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
-import com.uce.floracare.activities.Reyes_MiJardin.toPlant
-import com.uce.floracare.activities.adapters.PlantAdapter
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.uce.floracare.api_ingreso.data.FirestoreManager
+import com.uce.floracare.api_ingreso.data.PlantRepository
+import com.uce.floracare.api_ingreso.data.StorageManager
+import com.uce.floracare.domain.usecase.GeneratePlantTasksUC
 import com.uce.floracare.databinding.ActivityMiJardinBinding
-import kotlinx.coroutines.launch
 
 class MiJardinFragment : Fragment() {
 
     private var _binding: ActivityMiJardinBinding? = null
     private val binding get() = _binding!!
 
-    private val firestoreManager = FirestoreManager()
+    private val viewModel: MiJardinViewModel by viewModels {
+        object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                val repository = PlantRepository(FirestoreManager(), StorageManager(requireContext()))
+                val generatePlantTasksUC = GeneratePlantTasksUC()
+                return MiJardinViewModel(repository, generatePlantTasksUC) as T
+            }
+        }
+    }
+
+    private lateinit var plantAdapter: PlantAdapter
+    private lateinit var taskAdapter: TaskAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-
-        _binding =
-            ActivityMiJardinBinding.inflate(
-                inflater,
-                container,
-                false
-            )
-
+        _binding = ActivityMiJardinBinding.inflate(inflater, container, false)
         return binding.root
     }
 
-    override fun onViewCreated(
-        view: View,
-        savedInstanceState: Bundle?
-    ) {
-
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val adapter = PlantAdapter { plant ->
+        setupRecyclerView()
+        setupObservers()
 
-            // Acción al tocar planta
-
-        }
-
-        binding.rvPlants.layoutManager =
-            GridLayoutManager(requireContext(), 2)
-
-        binding.rvPlants.adapter = adapter
-
-        cargarPlantas(adapter)
+        viewModel.fetchPlants()
     }
 
-    private fun cargarPlantas(
-        adapter: PlantAdapter
-    ) {
+    private fun setupRecyclerView() {
+        plantAdapter = PlantAdapter { plant ->
+            // Acción al tocar planta (navegar a detalles, etc.)
+            Toast.makeText(requireContext(), "Planta: ${plant.nombreComun}", Toast.LENGTH_SHORT).show()
+        }
 
-        viewLifecycleOwner.lifecycleScope.launch {
+        taskAdapter = TaskAdapter()
 
-            val result =
-                firestoreManager.getPlants()
+        binding.rvPlants.apply {
+            layoutManager = GridLayoutManager(requireContext(), 2)
+            adapter = plantAdapter
+        }
 
-            result.onSuccess { entities ->
+        binding.rvTasks.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = taskAdapter
+        }
+    }
 
-                val plants =
-                    entities.map {
-                        it.toPlant()
-                    }
+    private fun setupObservers() {
+        viewModel.plantsList.observe(viewLifecycleOwner) { plants ->
+            plantAdapter.submitList(plants)
+        }
 
-                adapter.submitList(plants)
+        viewModel.pendingTasks.observe(viewLifecycleOwner) { tasks ->
+            taskAdapter.submitList(tasks)
+            binding.badgeRemaining.text = "${tasks.size} restantes"
+        }
 
-                val tasksPending =
-                    plants.count {
-                        it.necesitaAgua
-                    }
+        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+            // Si tienes un progress bar en tu layout, actívalo aquí
+            // binding.progressBar.isVisible = isLoading
+        }
 
-                binding.badgeRemaining.text =
-                    "$tasksPending restantes"
-            }
-
-            result.onFailure {
-
-                binding.badgeRemaining.text =
-                    "Error al cargar"
-
-                it.printStackTrace()
-            }
+        viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
+            Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
+            binding.badgeRemaining.text = "Error al cargar"
         }
     }
 

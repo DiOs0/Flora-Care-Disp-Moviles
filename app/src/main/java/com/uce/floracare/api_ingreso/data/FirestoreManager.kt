@@ -13,9 +13,22 @@ class FirestoreManager {
 
     suspend fun uploadUserPlant(plant: PlantEntity): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            // Guardamos en la colección específica para el usuario
-            userPlantsRef.document(plant.id.toString()).set(plant).await()
+            // Usamos add() para que Firebase genere un ID único automáticamente
+            // Evitando que una planta sobrescriba a otra
+            userPlantsRef.add(plant).await()
             Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getUserPlants(): Result<List<PlantEntity>> = withContext(Dispatchers.IO) {
+        try {
+            val snapshot = userPlantsRef.get().await()
+            val plants = snapshot.documents.mapNotNull {
+                it.toObject(PlantEntity::class.java)
+            }
+            Result.success(plants)
         } catch (e: Exception) {
             Result.failure(e)
         }
