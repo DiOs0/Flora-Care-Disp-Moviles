@@ -11,6 +11,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.uce.floracare.activities.Jhon_AddPlant.utils.AuthManager
 import com.uce.floracare.api_ingreso.data.FirestoreManager
 import com.uce.floracare.api_ingreso.data.PlantRepository
 import com.uce.floracare.api_ingreso.data.StorageManager
@@ -25,7 +26,8 @@ class MiJardinFragment : Fragment() {
     private val viewModel: MiJardinViewModel by viewModels {
         object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                val repository = PlantRepository(FirestoreManager(), StorageManager(requireContext()))
+                val authManager = AuthManager()
+                val repository = PlantRepository(FirestoreManager(authManager), StorageManager(requireContext()))
                 val generatePlantTasksUC = GeneratePlantTasksUC()
                 return MiJardinViewModel(repository, generatePlantTasksUC) as T
             }

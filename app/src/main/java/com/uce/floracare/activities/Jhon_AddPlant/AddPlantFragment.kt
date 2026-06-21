@@ -17,6 +17,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.uce.floracare.activities.Jhon_AddPlant.utils.AuthManager
 import com.uce.floracare.api_ingreso.data.FirestoreManager
 import com.uce.floracare.api_ingreso.data.PlantRepository
 import com.uce.floracare.api_ingreso.data.StorageManager
@@ -38,7 +39,8 @@ class AddPlantFragment : Fragment() {
     private val viewModel: AddPlantViewModel by viewModels {
         object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                val repository = PlantRepository(FirestoreManager(), StorageManager(requireContext()))
+                val authManager = AuthManager()
+                val repository = PlantRepository(FirestoreManager(authManager), StorageManager(requireContext()))
                 return AddPlantViewModel(repository) as T
             }
         }

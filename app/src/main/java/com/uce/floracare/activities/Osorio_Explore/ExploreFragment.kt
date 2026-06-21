@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.uce.floracare.R
 import com.uce.floracare.activities.MainActivity
 import com.uce.floracare.activities.Jhon_AddPlant.AddPlantFragment
+import com.uce.floracare.activities.Jhon_AddPlant.utils.AuthManager
 import com.uce.floracare.api_ingreso.data.FirestoreManager
 import com.uce.floracare.databinding.FragmentExploreBinding
 import kotlinx.coroutines.Dispatchers
@@ -22,7 +23,7 @@ import kotlinx.coroutines.withContext
 class ExploreFragment : Fragment() {
     private var _binding: FragmentExploreBinding? = null
     private val binding get() = _binding!!
-    private val firestoreManager = FirestoreManager()
+    private val firestoreManager = FirestoreManager(AuthManager())
 
     private lateinit var featuredAdapter: PlantAdapter
     private lateinit var catalogAdapter: PlantAdapter
