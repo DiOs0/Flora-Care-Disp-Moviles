@@ -1,6 +1,6 @@
 package com.uce.floracare.activities.Osorio_Explore
 
-import com.uce.floracare.api_ingreso.data.PlantEntity
+import com.uce.floracare.data.remote.dto.PlantEntity
 
 data class Plant(
 

@@ -1,6 +1,6 @@
 package com.uce.floracare.domain.usecase
 
-import com.uce.floracare.api_ingreso.data.PlantEntity
+import com.uce.floracare.data.remote.dto.PlantEntity
 import com.uce.floracare.domain.model.PlantTask
 import com.uce.floracare.domain.model.TaskType
 import java.text.SimpleDateFormat
@@ -40,7 +40,7 @@ class GeneratePlantTasksUC {
                 plant.tipo.contains("Suculenta", ignoreCase = true) && daysSinceWatering > 14 -> {
                     plantsToWater.add(plant.nombreComun)
                 }
-                (plant.tipo.contains("Interior", ignoreCase = true) || plant.tipo.contains("Exterior", ignoreCase = true)) 
+                (plant.tipo.contains("Interior", ignoreCase = true) || plant.tipo.contains("Exterior", ignoreCase = true))
                         && !plant.tipo.contains("Suculenta", ignoreCase = true) && daysSinceWatering > 5 -> {
                     plantsToWater.add(plant.nombreComun)
                 }
@@ -63,7 +63,11 @@ class GeneratePlantTasksUC {
             tasks.add(
                 PlantTask(
                     title = "Regar ${plantsToWater.size} plantas",
-                    description = "Las siguientes plantas necesitan agua: ${plantsToWater.joinToString(", ")}",
+                    description = "Las siguientes plantas necesitan agua: ${
+                        plantsToWater.joinToString(
+                            ", "
+                        )
+                    }",
                     taskType = TaskType.WATERING
                 )
             )

@@ -16,11 +16,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FloraCare">
         <activity
-            android:name=".activities.MainActivity"
+            android:name=".application.activities.MainActivity"
 
             android:exported="false" />
         <activity
-            android:name=".activities.Milan_Ajustes.WelcomeActivity"
+            android:name=".application.activities.WelcomeActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -30,7 +30,7 @@
         </activity>
 
         <activity
-            android:name=".activities.Jhon_AddPlant.Login"
+            android:name=".application.activities.Login"
             android:exported="false"/>
 
         <provider

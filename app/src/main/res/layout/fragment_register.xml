@@ -4,7 +4,21 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/login_green">
+    android:background="@drawable/bg_welcome_gradient">
+
+    <ImageView
+        android:layout_width="700dp"
+        android:layout_height="700dp"
+        android:alpha="0.04"
+        android:rotation="-40"
+        android:src="@drawable/hojas"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.441"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.428"
+        app:tint="@color/forest_green" />
 
     <ImageButton
         android:id="@+id/btnBack"
@@ -33,7 +47,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Crear Cuenta"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/forest_green"
             android:textSize="28sp"
             android:textStyle="bold" />
 
@@ -42,7 +56,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="Únete a FloraCare hoy"
-            android:textColor="#E0FFFFFF"
+            android:textColor="@color/forest_green"
             android:textSize="16sp" />
     </LinearLayout>
 
@@ -54,17 +68,17 @@
         android:layout_marginHorizontal="32dp"
         android:layout_marginTop="40dp"
         android:hint="Correo Electrónico"
-        android:textColorHint="#B3FFFFFF"
+        android:textColorHint="#555555"
         app:boxBackgroundColor="@android:color/transparent"
-        app:boxStrokeColor="#FFFFFF"
+        app:boxStrokeColor="#555555"
         app:boxStrokeWidth="1dp"
         app:boxCornerRadiusBottomEnd="32dp"
         app:boxCornerRadiusBottomStart="32dp"
         app:boxCornerRadiusTopEnd="32dp"
         app:boxCornerRadiusTopStart="32dp"
-        app:hintTextColor="#FFFFFF"
+        app:hintTextColor="#555555"
         app:startIconDrawable="@drawable/ic_person"
-        app:startIconTint="#FFFFFF"
+        app:startIconTint="#555555"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/llHeaderContainer">
@@ -74,7 +88,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="textEmailAddress"
-            android:textColor="#FFFFFF" />
+            android:textColor="#555555" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
@@ -85,19 +99,19 @@
         android:layout_marginHorizontal="32dp"
         android:layout_marginTop="16dp"
         android:hint="Contraseña"
-        android:textColorHint="#B3FFFFFF"
+        android:textColorHint="#555555"
         app:boxBackgroundColor="@android:color/transparent"
-        app:boxStrokeColor="#FFFFFF"
+        app:boxStrokeColor="#555555"
         app:boxStrokeWidth="1dp"
         app:boxCornerRadiusBottomEnd="32dp"
         app:boxCornerRadiusBottomStart="32dp"
         app:boxCornerRadiusTopEnd="32dp"
         app:boxCornerRadiusTopStart="32dp"
-        app:hintTextColor="#FFFFFF"
+        app:hintTextColor="#555555"
         app:startIconDrawable="@drawable/lock_open_right"
-        app:startIconTint="#FFFFFF"
+        app:startIconTint="#555555"
         app:passwordToggleEnabled="true"
-        app:passwordToggleTint="#FFFFFF"
+        app:passwordToggleTint="#555555"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tilEmail">
@@ -107,7 +121,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="textPassword"
-            android:textColor="#FFFFFF" />
+            android:textColor="#555555" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.button.MaterialButton
@@ -117,10 +131,10 @@
         android:layout_marginHorizontal="32dp"
         android:layout_marginTop="32dp"
         android:text="REGISTRARSE"
-        android:textColor="@color/primary_green"
+        android:textColor="#FFFFFF"
         android:textSize="16sp"
         android:textStyle="bold"
-        app:backgroundTint="#FFFFFF"
+        app:backgroundTint="@color/forest_green"
         app:cornerRadius="32dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

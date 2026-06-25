@@ -1,6 +1,6 @@
 package com.uce.floracare.activities.Reyes_MiJardin
 
-import com.uce.floracare.api_ingreso.data.PlantEntity
+import com.uce.floracare.data.remote.dto.PlantEntity
 import androidx.annotation.DrawableRes
 
 data class Plant(

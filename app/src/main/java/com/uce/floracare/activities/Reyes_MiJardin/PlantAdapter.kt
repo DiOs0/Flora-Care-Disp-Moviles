@@ -8,7 +8,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.uce.floracare.R
-import com.uce.floracare.api_ingreso.data.PlantEntity
+import com.uce.floracare.data.remote.dto.PlantEntity
 import com.uce.floracare.databinding.ItemPlantCardBinding
 
 class PlantAdapter(
