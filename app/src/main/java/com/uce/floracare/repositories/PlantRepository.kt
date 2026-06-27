@@ -17,38 +17,19 @@ class PlantRepository(
      * Guarda una nueva planta realizando el guardado local de la imagen (workaround para Spark plan)
      * y el guardado de datos en Firestore.
      */
-    suspend fun saveNewPlant(
-        name: String,
-        species: String,
-        location: String,
-        lastWatered: String,
-        photoUri: Uri
-    ): Result<Unit> {
+    suspend fun saveNewPlant(plant: PlantEntity, photoUri: Uri): Result<Unit> {
         return try {
             // 1. Guardar imagen LOCALMENTE (ya que Storage está bloqueado por el plan Spark)
-            val saveLocalResult = storageManager.saveImageLocally(photoUri)
+            val imagenResult = storageManager.saveImageLocally(photoUri)
 
-            // Si falla el guardado local, usamos una cadena vacía o una imagen por defecto
-            val imageUrl = saveLocalResult.getOrDefault("")
+            val localPath = imagenResult.getOrElse {
+                error -> return Result.failure(error)
+            }
 
-            // 3. Crear instancia de PlantEntity
-            val plant = PlantEntity(
-                id = (System.currentTimeMillis() % Int.MAX_VALUE).toInt(), // ID temporal para el objeto
-                nombreComun = name,
-                nombreCientifico = species,
-                imagen = imageUrl, // Aquí guardamos la ruta local (file://...)
-                tipo = location,
-                descripcion = "Planta guardada localmente (Cloud Storage deshabilitado)",
-                caracteristicas = Caracteristicas(
-                    indoor = location == "Interior"
-                ),
-                riego = Riego(
-                    frecuencia = "Último riego registrado: $lastWatered"
-                )
-            )
-
-            // 4. Guardar en Firestore en una colección SEPARADA
-            firestoreManager.uploadUserPlant(plant)
+            val platWithImage = plant.copy(imagen = localPath)
+            // Crea una propia coleccion para el usuario con el ID del usuario actual
+            firestoreManager.uploadUserPlant(platWithImage)
+            Result.success(Unit)
         } catch (e: Exception) {
             Log.e("PlantRepository", "Error en saveNewPlant", e)
             Result.failure(e)

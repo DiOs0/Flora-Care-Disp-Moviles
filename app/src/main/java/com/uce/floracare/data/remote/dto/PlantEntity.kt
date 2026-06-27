@@ -3,6 +3,9 @@ package com.uce.floracare.data.remote.dto
 import com.google.firebase.firestore.PropertyName
 import com.uce.floracare.data.local.dto.PerenualResponse
 
+/*
+    * DE AQUI ES EL MODELO DEL JSON PARA AGREGAR PLANTAS A LA BASE DE DATOS
+ */
 data class PlantEntity(
     val id: Int = 0,
     @get:PropertyName("nombre_comun")

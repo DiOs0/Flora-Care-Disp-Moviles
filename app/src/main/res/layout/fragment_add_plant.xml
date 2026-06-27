@@ -115,181 +115,323 @@
                     android:layout_marginBottom="-8dp"/>
             </androidx.constraintlayout.widget.ConstraintLayout>
 
-            <!-- NOMBRE -->
+            <!-- SECCIÓN 1: IDENTIFICACIÓN -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="17sp"
-                android:text="Nombre de la Planta"
-                android:textColor="#42493e"
+                android:text="Información General"
+                android:textColor="#2D5A27"
+                android:textSize="18sp"
                 android:textStyle="bold"
-                android:layout_marginBottom="4dp"/>
+                android:layout_marginBottom="12dp"/>
 
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
+                android:layout_marginBottom="12dp"
                 app:boxBackgroundColor="#f3f4ed"
                 app:boxCornerRadiusTopStart="12dp"
                 app:boxCornerRadiusTopEnd="12dp"
                 app:boxStrokeColor="#2D5A27"
-                app:endIconMode="custom"
-                app:endIconDrawable="@drawable/ic_logo">
-
+                android:hint="Nombre Común">
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etPlantName"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Ej: Sr. Helecho"
-                    android:textColorHint="@color/black"
-                    android:textSize="17sp"
                     android:inputType="textCapWords" />
             </com.google.android.material.textfield.TextInputLayout>
-
-            <!-- ESPECIE -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Especie"
-                android:textColor="#42493e"
-                android:textSize="17sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="4dp"/>
 
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
                 app:boxBackgroundColor="#f3f4ed"
                 app:boxCornerRadiusTopStart="12dp"
                 app:boxCornerRadiusTopEnd="12dp"
                 app:boxStrokeColor="#2D5A27"
-                app:endIconMode="custom"
-                app:endIconDrawable="@drawable/ic_logo">
-
+                android:hint="Nombre Científico">
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etPlantSpecies"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Buscar especie..."
-                    android:textColorHint="@color/black"
-                    android:textSize="17sp"/>
+                    android:inputType="textPersonName" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <HorizontalScrollView
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.Material3.TextInputLayout.FilledBox.ExposedDropdownMenu"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:scrollbars="none"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="16dp">
-
-                <com.google.android.material.chip.ChipGroup
-                    android:layout_width="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:boxBackgroundColor="#f3f4ed"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxStrokeColor="#2D5A27"
+                android:hint="Tipo de Planta">
+                <AutoCompleteTextView
+                    android:id="@+id/autoCompleteType"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:singleLine="true">
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/especie_monstera"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="17sp"
-                        android:text="Monstera"
-                        app:chipBackgroundColor="#A3B18A"
-                        android:textColor="#FFFFFF"/>
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/escape_suculenta"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="17sp"
-                        android:text="Suculenta"
-                        app:chipBackgroundColor="#e2e3dc"
-                        android:textColor="#42493e"/>
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/especie_cactus"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="17sp"
-                        android:text="Cactus"
-                        app:chipBackgroundColor="#e2e3dc"
-                        android:textColor="#42493e"/>
-                </com.google.android.material.chip.ChipGroup>
-            </HorizontalScrollView>
-
-            <!-- UBICACIÓN -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Ubicación"
-                android:textSize="17sp"
-                android:textColor="#42493e"
-                android:textStyle="bold"
-                android:layout_marginBottom="8dp"/>
-
-            <GridLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:columnCount="2"
-                android:rowCount="2"
-                android:layout_marginBottom="16dp">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnInterior"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
-                    android:layout_width="0dp"
-                    android:layout_height="60dp"
-                    android:layout_columnWeight="1"
-                    android:layout_marginEnd="8dp"
-                    android:text="Interior"
-                    android:textSize="17sp"
-                    android:textColor="#191c18"
-                    app:strokeColor="#2D5A27"
-                    app:strokeWidth="2dp"
-                    app:backgroundTint="#f3f4ed"
-                    app:cornerRadius="16dp"/>
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnExterior"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
-                    android:layout_width="0dp"
-                    android:layout_height="60dp"
-                    android:layout_columnWeight="1"
-                    android:textSize="17sp"
-                    android:layout_marginStart="8dp"
-                    android:text="Exterior"
-                    android:textColor="#191c18"
-                    app:backgroundTint="#f3f4ed"
-                    app:cornerRadius="16dp"
-                    app:strokeWidth="2dp"/>
-
-
-            </GridLayout>
-
-            <!-- ÚLTIMO RIEGO -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Último Riego"
-                android:textSize="17sp"
-                android:textColor="#42493e"
-                android:textStyle="bold"
-                android:layout_marginBottom="4dp"/>
+                    android:inputType="none" />
+            </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="32dp"
+                android:layout_marginBottom="24dp"
                 app:boxBackgroundColor="#f3f4ed"
                 app:boxCornerRadiusTopStart="12dp"
                 app:boxCornerRadiusTopEnd="12dp"
-                app:boxStrokeColor="#2D5A27">
-
+                app:boxStrokeColor="#2D5A27"
+                android:hint="Descripción">
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etLastWatered"
+                    android:id="@+id/etDescription"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:focusable="false"
-                    android:clickable="true"
-                    android:hint="DD/MM/AAAA" />
+                    android:gravity="top"
+                    android:inputType="textMultiLine"
+                    android:minLines="3" />
             </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- SECCIÓN 2: CUIDADOS Y CICLO -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Cuidados y Ciclo"
+                android:textColor="#2D5A27"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="12dp"/>
+
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.Material3.TextInputLayout.FilledBox.ExposedDropdownMenu"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:boxBackgroundColor="#f3f4ed"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxStrokeColor="#2D5A27"
+                android:hint="Ciclo de Vida">
+                <AutoCompleteTextView
+                    android:id="@+id/autoCompleteCycle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="none" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.Material3.TextInputLayout.FilledBox.ExposedDropdownMenu"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                app:boxBackgroundColor="#f3f4ed"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxStrokeColor="#2D5A27"
+                android:hint="Nivel de Cuidado">
+                <AutoCompleteTextView
+                    android:id="@+id/autoCompleteCareLevel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="none" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- SECCIÓN 3: RIEGO -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Riego"
+                android:textColor="#2D5A27"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="12dp"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="24dp">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="8dp"
+                    app:boxBackgroundColor="#f3f4ed"
+                    app:boxCornerRadiusTopStart="12dp"
+                    app:boxCornerRadiusTopEnd="12dp"
+                    app:boxStrokeColor="#2D5A27"
+                    android:hint="Frecuencia (Ej: Baja)">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etWateringFreq"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    app:boxBackgroundColor="#f3f4ed"
+                    app:boxCornerRadiusTopStart="12dp"
+                    app:boxCornerRadiusTopEnd="12dp"
+                    app:boxStrokeColor="#2D5A27"
+                    android:hint="Días (Ej: 1-3)">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etWateringValue"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
+
+            <!-- SECCIÓN 4: CLIMA -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Clima y Luz"
+                android:textColor="#2D5A27"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="12dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Luz Solar"
+                android:textSize="14sp"
+                android:textColor="#72796e"
+                android:layout_marginBottom="8dp"/>
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chipGroupSunlight"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:chipSpacingHorizontal="8dp">
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/solDirecto"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Sol Directo" />
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/sombraParcial"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Sombra Parcial" />
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/sombra"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Sombra" />
+            </com.google.android.material.chip.ChipGroup>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="32dp">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="8dp"
+                    app:boxBackgroundColor="#f3f4ed"
+                    app:boxCornerRadiusTopStart="12dp"
+                    app:boxCornerRadiusTopEnd="12dp"
+                    app:boxStrokeColor="#2D5A27"
+                    android:hint="Temp Mín (°C)">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etTempMin"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="numberSigned" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    app:boxBackgroundColor="#f3f4ed"
+                    app:boxCornerRadiusTopStart="12dp"
+                    app:boxCornerRadiusTopEnd="12dp"
+                    app:boxStrokeColor="#2D5A27"
+                    android:hint="Temp Máx (°C)">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etTempMax"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="numberSigned" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
+
+            <!-- SECCIÓN 5: CARACTERÍSTICAS ADICIONALES -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Información Adicional"
+                android:textColor="#2D5A27"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="12dp"/>
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chipGroupFeatures"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="32dp"
+                app:chipSpacingHorizontal="8dp">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipMedicinal"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Medicinal"
+                    app:chipIcon="@drawable/ic_logo"
+                    app:chipIconVisible="true"
+                    app:chipIconTint="#2D5A27"/>
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipIndoor"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Interior (Indoor)" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipTropical"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Tropical" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipDrought"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Resistente a sequía" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipToxicHumans"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Tóxica (Humanos)" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipToxicPets"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Tóxica (Mascotas)" />
+            </com.google.android.material.chip.ChipGroup>
 
             <!-- GUARDAR -->
             <com.google.android.material.button.MaterialButton

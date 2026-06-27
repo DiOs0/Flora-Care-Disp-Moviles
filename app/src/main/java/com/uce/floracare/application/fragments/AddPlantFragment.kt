@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.graphics.toColorInt
@@ -21,6 +22,10 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.uce.floracare.application.viewmodels.AddPlantViewModel
 import com.uce.floracare.utils.CameraManager
 import com.uce.floracare.application.activities.Login
+import com.uce.floracare.data.remote.dto.Caracteristicas
+import com.uce.floracare.data.remote.dto.PlantEntity
+import com.uce.floracare.data.remote.dto.Riego
+import com.uce.floracare.data.remote.dto.Temperatura
 import com.uce.floracare.repositories.connections.remote.firebase.AuthManager
 import com.uce.floracare.repositories.connections.remote.firebase.FirestoreManager
 import com.uce.floracare.repositories.PlantRepository
@@ -91,12 +96,27 @@ class AddPlantFragment : Fragment() {
         // Inicializamos el manager
         cameraManager = CameraManager(requireContext())
 
+        setupDropdowns()
         setupObservers()
 
         // Inicializar el estado visual de los botones de ubicación según lo seleccionado
-        updateLocationSelection(if (viewModel.selectedLocation == "Interior") binding.btnInterior else binding.btnExterior)
 
         initListeners()
+    }
+
+    private fun setupDropdowns() {
+        val types = arrayOf("Suculenta", "Cactus", "Follaje", "Flor", "Arbusto", "Árbol")
+        val cycles = arrayOf("Perenne", "Anual", "Bienal")
+        val careLevels = arrayOf("Bajo", "Medio", "Alto")
+
+        val typeAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, types)
+        binding.autoCompleteType.setAdapter(typeAdapter)
+
+        val cycleAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, cycles)
+        binding.autoCompleteCycle.setAdapter(cycleAdapter)
+
+        val careAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, careLevels)
+        binding.autoCompleteCareLevel.setAdapter(careAdapter)
     }
 
     private fun setupObservers() {
@@ -147,10 +167,7 @@ class AddPlantFragment : Fragment() {
 
 
 
-        // CALENDARIO
-        binding.etLastWatered.setOnClickListener {
-            showDatePickerDialog()
-        }
+
 
         // BOTON DE LA CAMARA
         binding.btnCapturePhoto.setOnClickListener {
@@ -165,16 +182,6 @@ class AddPlantFragment : Fragment() {
             requestPermissionLauncher.launch(Manifest.permission.CAMERA)
         }
 
-        // SELECCION DE UBICACION
-        binding.btnInterior.setOnClickListener {
-            viewModel.selectedLocation = "Interior"
-            updateLocationSelection(it)
-        }
-        binding.btnExterior.setOnClickListener {
-            viewModel.selectedLocation = "Exterior"
-            updateLocationSelection(it)
-        }
-
 
         binding.btnSavePlant.setOnClickListener {
             savePlantData()
@@ -185,10 +192,7 @@ class AddPlantFragment : Fragment() {
     /*
     METODO PARA INGRESAR A LA CAMARA
      */
-
-
-
-
+    
     private fun capturePhoto() {
         cameraManager.takePhoto(
             onPhotoSaved = { uri ->
@@ -203,31 +207,55 @@ class AddPlantFragment : Fragment() {
         )
     }
 
-    private fun showDatePickerDialog() {
-        val calendar = Calendar.getInstance()
-        val year = calendar.get(Calendar.YEAR)
-        val month = calendar.get(Calendar.MONTH)
-        val day = calendar.get(Calendar.DAY_OF_MONTH)
 
-        val datePickerDialog = DatePickerDialog(
-            requireContext(),
-            { _, selectedYear, selectedMonth, selectedDay ->
-                // Los meses en Calendar empiezan en 0, así que sumamos 1
-                val formattedDate = "$selectedDay/${selectedMonth + 1}/$selectedYear"
-                binding.etLastWatered.setText(formattedDate)
-            },
-            year, month, day
-        )
-        datePickerDialog.show()
-    }
 
     private fun savePlantData() {
         val plantName = binding.etPlantName.text.toString().trim()
         val plantSpecies = binding.etPlantSpecies.text.toString().trim()
-        val lastWatered = binding.etLastWatered.text.toString().trim()
+        val type = binding.autoCompleteType.text.toString().trim()
+        val description = binding.etDescription.text.toString().trim()
+        val cycle = binding.autoCompleteCycle.text.toString().trim()
+        val careLevel = binding.autoCompleteCareLevel.text.toString().trim()
+        val wateringFreq = binding.etWateringFreq.text.toString().trim()
+        val wateringValue = binding.etWateringValue.text.toString().trim()
+
+        val sunlight = binding.chipGroupSunlight.checkedChipIds.mapNotNull { id ->
+            when (id) {
+                binding.solDirecto.id -> "Sol Directo"
+                binding.sombraParcial.id -> "Sombra Parcial"
+                binding.sombra.id -> "Sombra"
+                else -> null
+            }
+        }
+
+        val tempMin = binding.etTempMin.text.toString().trim().toIntOrNull() ?: 0
+        val tempMax = binding.etTempMax.text.toString().trim().toIntOrNull() ?: 0
+
+        val caracteristicas = Caracteristicas(
+            medicinal = binding.chipMedicinal.isChecked,
+            indoor = binding.chipIndoor.isChecked,
+            tropical = binding.chipTropical.isChecked,
+            resistenteSequia = binding.chipDrought.isChecked,
+            toxicaHumanos = binding.chipToxicHumans.isChecked,
+            toxicaMascotas = binding.chipToxicPets.isChecked
+        )
+
+        val plantEntity = PlantEntity(
+            nombreComun = plantName,
+            nombreCientifico = plantSpecies,
+            tipo = type,
+            descripcion = description,
+            cicloVida = cycle,
+            nivelCuidado = careLevel,
+            caracteristicas = caracteristicas,
+            riego = Riego(frecuencia = wateringFreq, cadaValor = wateringValue),
+            luzSolar = sunlight,
+            temperatura = Temperatura(min = tempMin, max = tempMax, descripcion = "Personalizada"),
+            imagen = viewModel.selectedPhotoUri?.toString() ?: ""
+        )
 
         // Delegamos la lógica de guardado al ViewModel
-        viewModel.savePlant(plantName, plantSpecies, lastWatered)
+        viewModel.savePlant(plantEntity)
     }
 
     private fun setLoadingState(loading: Boolean) {
@@ -238,22 +266,7 @@ class AddPlantFragment : Fragment() {
 
 
 
-    private fun updateLocationSelection(view: View) {
-        val buttons = listOf(
-            binding.btnInterior,
-            binding.btnExterior
-        )
 
-        buttons.forEach { button ->
-            val isSelected = button.id == view.id
-
-            button.strokeWidth = if (isSelected) 2 else 0
-            button.strokeColor = ColorStateList.valueOf("#2D5A27".toColorInt())
-            button.backgroundTintList = ColorStateList.valueOf(
-                if (isSelected) "#f3f4ed".toColorInt() else Color.WHITE
-            )
-        }
-    }
 
     override fun onDestroyView() {
         super.onDestroyView()

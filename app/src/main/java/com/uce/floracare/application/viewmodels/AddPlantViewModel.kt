@@ -1,10 +1,12 @@
 package com.uce.floracare.application.viewmodels
 
 import android.net.Uri
+import androidx.core.net.toUri
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.uce.floracare.data.remote.dto.PlantEntity
 import com.uce.floracare.repositories.PlantRepository
 import kotlinx.coroutines.launch
 
@@ -17,8 +19,8 @@ class AddPlantViewModel(private val repository: PlantRepository) : ViewModel() {
     private val _saveSuccess = MutableLiveData<Boolean>()
     val saveSuccess: LiveData<Boolean> get() = _saveSuccess
 
-    private val _errorMessage = MutableLiveData<String>()
-    val errorMessage: LiveData<String> get() = _errorMessage
+    private val _errorMessage = MutableLiveData<String?>()
+    val errorMessage: LiveData<String> get() = _errorMessage as LiveData<String>
 
     // --- Datos temporales del formulario ---
     var selectedPhotoUri: Uri? = null
@@ -27,18 +29,41 @@ class AddPlantViewModel(private val repository: PlantRepository) : ViewModel() {
     /**
      * Valida los datos y ejecuta el guardado en el repositorio.
      */
-    fun savePlant(name: String, species: String, lastWatered: String) {
+    fun savePlant(plantVM : PlantEntity) {
         // Validaciones básicas
-        if (name.isBlank()) {
-            _errorMessage.value = "El nombre de la planta es obligatorio"
-            return
-        }
-        if (species.isBlank()) {
-            _errorMessage.value = "La especie es obligatoria"
-            return
-        }
-        if (selectedPhotoUri == null) {
-            _errorMessage.value = "Debes capturar una foto de la planta"
+        val rules = listOf(
+            // --- Datos Básicos ---
+            { plantVM.nombreComun.isBlank() } to "El nombre común es obligatorio",
+            { plantVM.nombreCientifico.isBlank() } to "El nombre científico es obligatorio",
+            { plantVM.tipo.isBlank() } to "Debes especificar el tipo de planta",
+            { plantVM.descripcion.isBlank() } to "La descripción no puede estar vacía",
+
+            // --- Ciclo y Cuidados ---
+            { plantVM.cicloVida.isBlank() } to "Debes indicar el ciclo de vida",
+            { plantVM.nivelCuidado.isBlank() } to "Indica el nivel de cuidado (Ej: Bajo, Medio, Alto)",
+
+            // --- Imagen (Uri capturada en el ViewModel) ---
+            { selectedPhotoUri == null } to "Debes capturar o seleccionar una foto de la planta",
+
+            // --- Riego ---
+            { plantVM.riego.frecuencia.isBlank() } to "La frecuencia de riego es obligatoria",
+            { plantVM.riego.cadaValor.isBlank() } to "Debes indicar cada cuánto tiempo se debe regar",
+
+            // --- Luz Solar (Validación de Lista) ---
+            { plantVM.luzSolar.isEmpty() } to "Debes seleccionar al menos un tipo de luz solar",
+
+            // --- Temperatura (Validación de Rangos) ---
+            { plantVM.temperatura.min == 0 && plantVM.temperatura.max == 0 } to "Debes registrar rangos de temperatura válidos",
+            { plantVM.temperatura.min > plantVM.temperatura.max } to "La temperatura mínima no puede ser mayor a la máxima",
+            { plantVM.temperatura.descripcion.isBlank() } to "La descripción de la temperatura es obligatoria"
+
+
+        )
+        val error = rules.find { it.first() }?.second
+
+
+        if (error != null) {
+            _errorMessage.value = error
             return
         }
 
@@ -46,11 +71,7 @@ class AddPlantViewModel(private val repository: PlantRepository) : ViewModel() {
 
         viewModelScope.launch {
             val result = repository.saveNewPlant(
-                name = name,
-                species = species,
-                location = selectedLocation,
-                lastWatered = lastWatered,
-                photoUri = selectedPhotoUri!!
+                plantVM, plantVM.imagen.toUri()
             )
 
             result.fold(
