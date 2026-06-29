@@ -29,7 +29,7 @@ class AddPlantViewModel(private val repository: PlantRepository) : ViewModel() {
     /**
      * Valida los datos y ejecuta el guardado en el repositorio.
      */
-    fun savePlant(plantVM : PlantEntity) {
+    fun savePlant(plantVM : PlantEntity, fromExplore: Boolean = false) {
         // Validaciones básicas
         val rules = listOf(
             // --- Datos Básicos ---
@@ -43,7 +43,7 @@ class AddPlantViewModel(private val repository: PlantRepository) : ViewModel() {
             { plantVM.nivelCuidado.isBlank() } to "Indica el nivel de cuidado (Ej: Bajo, Medio, Alto)",
 
             // --- Imagen (Uri capturada en el ViewModel) ---
-            { selectedPhotoUri == null } to "Debes capturar o seleccionar una foto de la planta",
+            { !fromExplore && selectedPhotoUri == null } to "Debes capturar o seleccionar una foto de la planta",
 
             // --- Riego ---
             { plantVM.riego.frecuencia.isBlank() } to "La frecuencia de riego es obligatoria",
@@ -70,9 +70,13 @@ class AddPlantViewModel(private val repository: PlantRepository) : ViewModel() {
         _isLoading.value = true
 
         viewModelScope.launch {
-            val result = repository.saveNewPlant(
-                plantVM, plantVM.imagen.toUri()
-            )
+            val result = if (fromExplore && selectedPhotoUri == null) {
+                repository.savePlantDirectly(plantVM)
+            } else {
+                repository.saveNewPlant(
+                    plantVM, plantVM.imagen.toUri()
+                )
+            }
 
             result.fold(
                 onSuccess = {

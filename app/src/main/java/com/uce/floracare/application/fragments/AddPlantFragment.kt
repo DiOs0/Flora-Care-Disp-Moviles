@@ -42,6 +42,12 @@ class AddPlantFragment : Fragment() {
     // Instanciamos nuestro CameraManager y ViewModel
     private lateinit var cameraManager: CameraManager
 
+    // Variables para detectar el flujo "Explorar" y rastrear cambios
+    private var isExploreFlow: Boolean = false
+    private var originalPlantName: String? = null
+    private var originalPlantImage: String? = null
+    private var originalTempDescription: String? = null
+
     private val viewModel: AddPlantViewModel by viewModels {
         object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -81,27 +87,78 @@ class AddPlantFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Recuperar datos pasados desde ExploreFragment
-        arguments?.let {
-            val name = it.getString(ARG_PLANT_NAME)
-            val species = it.getString(ARG_PLANT_SPECIES)
-            val isIndoor = it.getBoolean(ARG_IS_INDOOR, true) // Por defecto true
-
-            if (!name.isNullOrBlank()) binding.etPlantName.setText(name)
-            if (!species.isNullOrBlank()) binding.etPlantSpecies.setText(species)
-
-            viewModel.selectedLocation = if (isIndoor) "Interior" else "Exterior"
-        }
-
-        // Inicializamos el manager
         cameraManager = CameraManager(requireContext())
 
         setupDropdowns()
         setupObservers()
-
-        // Inicializar el estado visual de los botones de ubicación según lo seleccionado
-
         initListeners()
+
+        // Recuperar datos pasados desde ExploreFragment (después de setupDropdowns para AutoCompleteTextView)
+        populateFormFromArguments()
+    }
+
+    private fun populateFormFromArguments() {
+        arguments?.let {
+            val entity = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                it.getSerializable(ARG_PLANT_ENTITY, PlantEntity::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                it.getSerializable(ARG_PLANT_ENTITY) as? PlantEntity
+            }
+
+            if (entity != null) {
+                isExploreFlow = true
+                originalPlantName = entity.nombreComun
+                originalPlantImage = entity.imagen
+
+                binding.etPlantName.setText(entity.nombreComun)
+                binding.etPlantSpecies.setText(entity.nombreCientifico)
+                if (entity.tipo.isNotBlank()) binding.autoCompleteType.setText(entity.tipo, false)
+                binding.etDescription.setText(entity.descripcion)
+                if (entity.cicloVida.isNotBlank()) binding.autoCompleteCycle.setText(entity.cicloVida, false)
+                if (entity.nivelCuidado.isNotBlank()) binding.autoCompleteCareLevel.setText(entity.nivelCuidado, false)
+                binding.etWateringFreq.setText(entity.riego.frecuencia)
+                binding.etWateringValue.setText(entity.riego.cadaValor)
+
+                binding.chipGroupSunlight.clearCheck()
+                entity.luzSolar.forEach { luz ->
+                    when (luz.lowercase().trim()) {
+                        "sol directo", "full sun" -> binding.solDirecto.isChecked = true
+                        "sombra parcial", "part sun", "part shade", "partial sun", "partial shade", "filtered shade" -> binding.sombraParcial.isChecked = true
+                        "sombra", "shade", "deep shade" -> binding.sombra.isChecked = true
+                    }
+                }
+
+                binding.etTempMin.setText(entity.temperatura.min.toString())
+                binding.etTempMax.setText(entity.temperatura.max.toString())
+                originalTempDescription = entity.temperatura.descripcion
+
+                binding.chipMedicinal.isChecked = entity.caracteristicas.medicinal
+                binding.chipIndoor.isChecked = entity.caracteristicas.indoor
+                binding.chipTropical.isChecked = entity.caracteristicas.tropical
+                binding.chipDrought.isChecked = entity.caracteristicas.resistenteSequia
+                binding.chipToxicHumans.isChecked = entity.caracteristicas.toxicaHumanos
+                binding.chipToxicPets.isChecked = entity.caracteristicas.toxicaMascotas
+
+                viewModel.selectedLocation = if (entity.caracteristicas.indoor) "Interior" else "Exterior"
+            } else {
+                val name = it.getString(ARG_PLANT_NAME)
+                val species = it.getString(ARG_PLANT_SPECIES)
+                val isIndoor = it.getBoolean(ARG_IS_INDOOR, true)
+                val imageUrl = it.getString(ARG_PLANT_IMAGE)
+
+                if (!name.isNullOrBlank()) binding.etPlantName.setText(name)
+                if (!species.isNullOrBlank()) binding.etPlantSpecies.setText(species)
+
+                if (imageUrl != null) {
+                    isExploreFlow = true
+                    originalPlantName = name
+                    originalPlantImage = imageUrl
+                }
+
+                viewModel.selectedLocation = if (isIndoor) "Interior" else "Exterior"
+            }
+        }
     }
 
     private fun setupDropdowns() {
@@ -210,6 +267,24 @@ class AddPlantFragment : Fragment() {
 
 
     private fun savePlantData() {
+        val plantEntity = buildPlantEntity()
+
+        // Flujo "Explorar": verificar si el nombre común y la foto no han sido modificados
+        if (isExploreFlow) {
+            val currentName = binding.etPlantName.text.toString().trim()
+            val nameUnchanged = !currentName.isNullOrBlank() && currentName == originalPlantName
+            val photoUnchanged = viewModel.selectedPhotoUri == null
+
+            if (nameUnchanged && photoUnchanged) {
+                showUnsavedAlert(plantEntity)
+                return
+            }
+        }
+
+        viewModel.savePlant(plantEntity)
+    }
+
+    private fun buildPlantEntity(): PlantEntity {
         val plantName = binding.etPlantName.text.toString().trim()
         val plantSpecies = binding.etPlantSpecies.text.toString().trim()
         val type = binding.autoCompleteType.text.toString().trim()
@@ -240,7 +315,13 @@ class AddPlantFragment : Fragment() {
             toxicaMascotas = binding.chipToxicPets.isChecked
         )
 
-        val plantEntity = PlantEntity(
+        val imagen = if (isExploreFlow && viewModel.selectedPhotoUri == null) {
+            originalPlantImage ?: ""
+        } else {
+            viewModel.selectedPhotoUri?.toString() ?: ""
+        }
+
+        return PlantEntity(
             nombreComun = plantName,
             nombreCientifico = plantSpecies,
             tipo = type,
@@ -250,12 +331,22 @@ class AddPlantFragment : Fragment() {
             caracteristicas = caracteristicas,
             riego = Riego(frecuencia = wateringFreq, cadaValor = wateringValue),
             luzSolar = sunlight,
-            temperatura = Temperatura(min = tempMin, max = tempMax, descripcion = "Personalizada"),
-            imagen = viewModel.selectedPhotoUri?.toString() ?: ""
+            temperatura = Temperatura(min = tempMin, max = tempMax, descripcion = originalTempDescription ?: "Personalizada"),
+            imagen = imagen
         )
+    }
 
-        // Delegamos la lógica de guardado al ViewModel
-        viewModel.savePlant(plantEntity)
+    private fun showUnsavedAlert(plantEntity: PlantEntity) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Sin cambios detectados")
+            .setMessage("No has modificado el nombre común ni has tomado una nueva foto. ¿Deseas guardar la planta de todas formas?")
+            .setPositiveButton("Sí, guardar") { _, _ ->
+                viewModel.savePlant(plantEntity, fromExplore = true)
+            }
+            .setNegativeButton("Cancelar") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
     }
 
     private fun setLoadingState(loading: Boolean) {
@@ -277,13 +368,19 @@ class AddPlantFragment : Fragment() {
         private const val ARG_PLANT_NAME = "plant_name"
         private const val ARG_PLANT_SPECIES = "plant_species"
         private const val ARG_IS_INDOOR = "is_indoor"
+        private const val ARG_PLANT_IMAGE = "plant_image"
+        private const val ARG_PLANT_ENTITY = "plant_entity"
 
-        fun newInstance(name: String, species: String, isIndoor: Boolean): AddPlantFragment {
+        fun newInstance(name: String, species: String, isIndoor: Boolean, imageUrl: String? = null, plantEntity: PlantEntity? = null): AddPlantFragment {
             val fragment = AddPlantFragment()
             val args = Bundle()
             args.putString(ARG_PLANT_NAME, name)
             args.putString(ARG_PLANT_SPECIES, species)
             args.putBoolean(ARG_IS_INDOOR, isIndoor)
+            args.putString(ARG_PLANT_IMAGE, imageUrl)
+            if (plantEntity != null) {
+                args.putSerializable(ARG_PLANT_ENTITY, plantEntity)
+            }
             fragment.arguments = args
             return fragment
         }

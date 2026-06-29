@@ -1,6 +1,8 @@
 package com.uce.floracare.application.fragments
 
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,9 +12,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.uce.floracare.R
 import com.uce.floracare.repositories.connections.remote.firebase.AuthManager
-import com.uce.floracare.activities.Osorio_Explore.Plant
 import com.uce.floracare.activities.Osorio_Explore.PlantAdapter
-import com.uce.floracare.activities.Osorio_Explore.toExplorePlant
+import com.uce.floracare.data.remote.dto.PlantEntity
 import com.uce.floracare.repositories.connections.remote.firebase.FirestoreManager
 import com.uce.floracare.application.activities.MainActivity
 import com.uce.floracare.databinding.FragmentExploreBinding
@@ -42,6 +43,7 @@ class ExploreFragment : Fragment() {
 
         setupRecyclerViews()
         setupChips()
+        setupSearchListener()
         loadData()
     }
 
@@ -72,11 +74,13 @@ class ExploreFragment : Fragment() {
         }
     }
 
-    private fun navigateToDetail(plant: Plant) {
+    private fun navigateToDetail(plant: PlantEntity) {
         val addPlantFragment = AddPlantFragment.newInstance(
-            name = plant.nombre,
+            name = plant.nombreComun,
             species = plant.nombreCientifico,
-            isIndoor = plant.indoor
+            isIndoor = plant.caracteristicas.indoor,
+            imageUrl = plant.imagen,
+            plantEntity = plant
         )
 
         (activity as? MainActivity)?.apply {
@@ -105,6 +109,20 @@ class ExploreFragment : Fragment() {
         }
     }
 
+    private fun setupSearchListener() {
+        binding.etSearchPlants.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+
+            override fun afterTextChanged(s: Editable?) {
+                val query = s?.toString() ?: ""
+                val hasResults = catalogAdapter.filter(query)
+                binding.tvNoResults.visibility = if (query.isNotBlank() && !hasResults) View.VISIBLE else View.GONE
+            }
+        })
+    }
+
     private fun loadData() {
         showLoading(true)
         viewLifecycleOwner.lifecycleScope.launch {
@@ -112,7 +130,7 @@ class ExploreFragment : Fragment() {
                 firestoreManager.getPlants(limit = 5)
             }
             featuredResult.onSuccess { entities ->
-                featuredAdapter.submitList(entities.map { it.toExplorePlant() })
+                featuredAdapter.submitFullList(entities)
             }
             featuredResult.onFailure { e ->
                 Toast.makeText(requireContext(), "Error al carrar destacadas: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -133,7 +151,12 @@ class ExploreFragment : Fragment() {
                 }
             }
             result.onSuccess { entities ->
-                catalogAdapter.submitList(entities.map { it.toExplorePlant() })
+                catalogAdapter.submitFullList(entities)
+                val query = binding.etSearchPlants.text.toString()
+                if (query.isNotBlank()) {
+                    val hasResults = catalogAdapter.filter(query)
+                    binding.tvNoResults.visibility = if (!hasResults) View.VISIBLE else View.GONE
+                }
             }
             result.onFailure { e ->
                 Toast.makeText(requireContext(), "Error al carrar catálogo: ${e.message}", Toast.LENGTH_SHORT).show()

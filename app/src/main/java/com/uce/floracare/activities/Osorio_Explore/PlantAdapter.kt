@@ -12,11 +12,15 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.uce.floracare.R
+import com.uce.floracare.data.remote.dto.PlantEntity
 
 class PlantAdapter(
-    private val onPlantClick: (Plant) -> Unit,
+    private val onPlantClick: (PlantEntity) -> Unit,
     private val layoutRes: Int
-) : ListAdapter<Plant, PlantAdapter.PlantViewHolder>(DiffCallback) {
+) : ListAdapter<PlantEntity, PlantAdapter.PlantViewHolder>(DiffCallback) {
+
+    var fullList: List<PlantEntity> = emptyList()
+        private set
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PlantViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(layoutRes, parent, false)
@@ -27,6 +31,24 @@ class PlantAdapter(
         holder.bind(getItem(position))
     }
 
+    fun submitFullList(list: List<PlantEntity>) {
+        fullList = list
+        submitList(list)
+    }
+
+    fun filter(query: String): Boolean {
+        val filtered = if (query.isBlank()) {
+            fullList
+        } else {
+            fullList.filter { plant ->
+                plant.nombreComun.lowercase().contains(query.lowercase()) ||
+                plant.nombreCientifico.lowercase().contains(query.lowercase())
+            }
+        }
+        submitList(filtered)
+        return filtered.isNotEmpty()
+    }
+
     inner class PlantViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val ivImage: ImageView = itemView.findViewById(R.id.ivPlantImage)
         private val tvName: TextView = itemView.findViewById(R.id.tvPlantName)
@@ -34,19 +56,19 @@ class PlantAdapter(
         private val tvTag: TextView? = itemView.findViewById(R.id.tvPlantTag)
         private val tvCareLevel: TextView = itemView.findViewById(R.id.tvPlantCareLevel)
 
-        fun bind(plant: Plant) {
+        fun bind(plant: PlantEntity) {
             Glide.with(ivImage.context)
-                .load(plant.imagenUrl)
+                .load(plant.imagen)
                 .placeholder(R.drawable.ic_launcher_foreground)
                 .error(R.drawable.ic_launcher_foreground)
                 .centerCrop()
                 .into(ivImage)
 
-            tvName.text = plant.nombre
+            tvName.text = plant.nombreComun
             tvScientific.text = plant.nombreCientifico
 
             tvTag?.apply {
-                text = if (plant.indoor) "Interior" else "Exterior"
+                text = if (plant.caracteristicas.indoor) "Interior" else "Exterior"
                 visibility = View.VISIBLE
             }
 
@@ -60,7 +82,7 @@ class PlantAdapter(
             "low" -> Triple("Fácil", R.color.care_low, R.color.care_low_bg)
             "medium", "moderate" -> Triple("Medio", R.color.care_medium, R.color.care_medium_bg)
             "high" -> Triple("Avanzado", R.color.care_high, R.color.care_high_bg)
-            else -> Triple(level.ifEmpty { "—" }, R.color.primary_green, R.color.accent_green)
+            else -> Triple(level.ifEmpty { "\u2014" }, R.color.primary_green, R.color.accent_green)
         }
 
         textView.text = text
@@ -85,8 +107,8 @@ class PlantAdapter(
         textView.background = bg
     }
 
-    private object DiffCallback : DiffUtil.ItemCallback<Plant>() {
-        override fun areItemsTheSame(oldItem: Plant, newItem: Plant): Boolean = oldItem.id == newItem.id
-        override fun areContentsTheSame(oldItem: Plant, newItem: Plant): Boolean = oldItem == newItem
+    private object DiffCallback : DiffUtil.ItemCallback<PlantEntity>() {
+        override fun areItemsTheSame(oldItem: PlantEntity, newItem: PlantEntity): Boolean = oldItem.id == newItem.id
+        override fun areContentsTheSame(oldItem: PlantEntity, newItem: PlantEntity): Boolean = oldItem == newItem
     }
 }
