@@ -2,9 +2,7 @@ package com.uce.floracare.repositories
 
 import android.net.Uri
 import android.util.Log
-import com.uce.floracare.data.remote.dto.Caracteristicas
 import com.uce.floracare.data.remote.dto.PlantEntity
-import com.uce.floracare.data.remote.dto.Riego
 import com.uce.floracare.repositories.connections.remote.firebase.FirestoreManager
 import com.uce.floracare.repositories.connections.remote.firebase.StorageManager
 
@@ -14,32 +12,157 @@ class PlantRepository(
 ) {
 
     /**
-     * Guarda una nueva planta realizando el guardado local de la imagen (workaround para Spark plan)
-     * y el guardado de datos en Firestore.
+     * Guarda nueva planta
      */
-    suspend fun saveNewPlant(plant: PlantEntity, photoUri: Uri): Result<Unit> {
+    suspend fun saveNewPlant(
+        plant: PlantEntity,
+        photoUri: Uri
+    ): Result<Unit> {
+
         return try {
-            // 1. Guardar imagen LOCALMENTE (ya que Storage está bloqueado por el plan Spark)
-            val imagenResult = storageManager.saveImageLocally(photoUri)
 
-            val localPath = imagenResult.getOrElse {
-                error -> return Result.failure(error)
-            }
+            val imagenResult =
+                storageManager
+                    .saveImageLocally(
+                        photoUri
+                    )
 
-            val platWithImage = plant.copy(imagen = localPath)
-            // Crea una propia coleccion para el usuario con el ID del usuario actual
-            firestoreManager.uploadUserPlant(platWithImage)
+            val localPath =
+                imagenResult.getOrElse {
+
+                        error ->
+
+                    return Result.failure(
+                        error
+                    )
+
+                }
+
+            val plantWithImage =
+                plant.copy(
+                    imagen = localPath
+                )
+
+            firestoreManager
+                .uploadUserPlant(
+                    plantWithImage
+                )
+
             Result.success(Unit)
+
         } catch (e: Exception) {
-            Log.e("PlantRepository", "Error en saveNewPlant", e)
+
+            Log.e(
+                "PlantRepository",
+                "Error saveNewPlant",
+                e
+            )
+
             Result.failure(e)
+
         }
+
+    }
+
+
+    /**
+     * Obtener todas las plantas del usuario
+     */
+    suspend fun getMyPlants():
+            Result<List<PlantEntity>> {
+
+        return firestoreManager
+            .getUserPlants()
+
+    }
+
+
+    /**
+     * Obtener detalle por ID
+     */
+
+    suspend fun getPlantById(
+        plantId:Int
+    ):Result<PlantEntity>{
+
+        return try{
+
+            val result =
+                firestoreManager
+                    .getUserPlants()
+
+            result.fold(
+
+                onSuccess = { list ->
+
+                    val plant =
+                        list.find {
+
+                            it.id==plantId
+                        }
+
+                    if(plant!=null){
+
+                        Result.success(
+                            plant
+                        )
+
+                    }else{
+
+                        Result.failure(
+                            Exception(
+                                "Planta no encontrada"
+                            )
+                        )
+
+                    }
+
+                },
+
+                onFailure = {
+
+                    Result.failure(it)
+
+                }
+
+            )
+
+        }catch(e:Exception){
+
+            Result.failure(e)
+
+        }
+
+    }
+
+
+    /**
+     * Actualizar planta
+     */
+
+    suspend fun updatePlant(
+        plant: PlantEntity
+    ): Result<Unit> {
+
+        return firestoreManager
+            .updateUserPlant(
+                plant
+            )
+
     }
 
     /**
-     * Obtiene la lista de plantas creadas por el usuario desde Firestore.
+     * Eliminar planta
      */
-    suspend fun getMyPlants(): Result<List<PlantEntity>> {
-        return firestoreManager.getUserPlants()
+
+    suspend fun deletePlant(
+        firestoreId:String
+    ):Result<Unit>{
+
+        return firestoreManager
+            .deleteUserPlant(
+                firestoreId
+            )
+
     }
 }

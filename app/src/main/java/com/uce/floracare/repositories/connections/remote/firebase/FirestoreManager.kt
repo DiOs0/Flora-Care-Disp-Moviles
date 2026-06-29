@@ -38,16 +38,41 @@ class FirestoreManager(private val authManager: AuthManager) {
     /**
      * Obtiene solo las plantas pertenecientes al usuario actual (Su Jardín).
      */
-    suspend fun getUserPlants(): Result<List<PlantEntity>> = withContext(Dispatchers.IO) {
-        try {
-            val snapshot = getMyPlantsCollection().get().await()
-            val plants = snapshot.documents.mapNotNull {
-                it.toObject(PlantEntity::class.java)
-            }
+    suspend fun getUserPlants():
+            Result<List<PlantEntity>>
+            = withContext(Dispatchers.IO){
+
+        try{
+
+            val snapshot=
+                getMyPlantsCollection()
+                    .get()
+                    .await()
+
+            val plants=
+                snapshot.documents.mapNotNull{
+
+                    val plant=
+                        it.toObject(
+                            PlantEntity::class.java
+                        )
+
+                    plant?.copy(
+                        firestoreId=
+                            it.id
+                    )
+
+                }
+
             Result.success(plants)
-        } catch (e: Exception) {
-            Result.failure(e)
+
         }
+        catch(e:Exception){
+
+            Result.failure(e)
+
+        }
+
     }
 
     /**
@@ -108,4 +133,55 @@ class FirestoreManager(private val authManager: AuthManager) {
                 Result.failure(e)
             }
         }
+
+    suspend fun deleteUserPlant(
+        firestoreId:String
+    ):Result<Unit>
+            = withContext(Dispatchers.IO){
+
+        try{
+
+            getMyPlantsCollection()
+                .document(
+                    firestoreId
+                )
+                .delete()
+                .await()
+
+            Result.success(Unit)
+
+        }
+        catch(e:Exception){
+
+            Result.failure(e)
+
+        }
+
+    }
+
+    suspend fun updateUserPlant(
+        plant:PlantEntity
+    ):Result<Unit> = withContext(Dispatchers.IO){
+
+        try{
+
+            getMyPlantsCollection()
+                .document(
+                    plant.id.toString()
+                )
+                .set(
+                    plant
+                )
+                .await()
+
+            Result.success(Unit)
+
+        }
+        catch(e:Exception){
+
+            Result.failure(e)
+
+        }
+
+    }
 }

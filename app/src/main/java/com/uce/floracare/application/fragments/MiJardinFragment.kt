@@ -1,3 +1,4 @@
+
 package com.uce.floracare.application.fragments
 
 import android.os.Bundle
@@ -15,6 +16,7 @@ import com.uce.floracare.repositories.connections.remote.firebase.AuthManager
 import com.uce.floracare.application.viewmodels.MiJardinViewModel
 import com.uce.floracare.activities.Reyes_MiJardin.PlantAdapter
 import com.uce.floracare.activities.Reyes_MiJardin.TaskAdapter
+import com.uce.floracare.application.activities.MainActivity
 import com.uce.floracare.repositories.connections.remote.firebase.FirestoreManager
 import com.uce.floracare.repositories.PlantRepository
 import com.uce.floracare.repositories.connections.remote.firebase.StorageManager
@@ -61,9 +63,26 @@ class MiJardinFragment : Fragment() {
 
     private fun setupRecyclerView() {
         plantAdapter = PlantAdapter { plant ->
-            // Acción al tocar planta (navegar a detalles, etc.)
-            Toast.makeText(requireContext(), "Planta: ${plant.nombreComun}", Toast.LENGTH_SHORT)
-                .show()
+
+            val bundle=
+                Bundle()
+
+            bundle.putSerializable(
+                "plant",
+                plant
+            )
+
+            val fragment=
+                DetallePlantaFragment()
+
+            fragment.arguments=
+                bundle
+
+            (activity as MainActivity)
+                .loadFragment(
+                    fragment
+                )
+
         }
 
         taskAdapter = TaskAdapter()
