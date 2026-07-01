@@ -159,6 +159,8 @@ class FirestoreManager(private val authManager: AuthManager) {
 
     }
 
+    //Por favor no tocar este método
+
     suspend fun updateUserPlant(
         plant:PlantEntity
     ):Result<Unit> = withContext(Dispatchers.IO){
@@ -167,7 +169,7 @@ class FirestoreManager(private val authManager: AuthManager) {
 
             getMyPlantsCollection()
                 .document(
-                    plant.id.toString()
+                    plant.firestoreId
                 )
                 .set(
                     plant
