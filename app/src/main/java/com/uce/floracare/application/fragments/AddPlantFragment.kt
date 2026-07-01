@@ -5,6 +5,7 @@ import android.app.DatePickerDialog
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -18,7 +19,11 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import com.cloudinary.android.MediaManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
 import com.uce.floracare.application.viewmodels.AddPlantViewModel
 import com.uce.floracare.utils.CameraManager
 import com.uce.floracare.application.activities.Login
@@ -31,7 +36,14 @@ import com.uce.floracare.repositories.connections.remote.firebase.FirestoreManag
 import com.uce.floracare.repositories.PlantRepository
 import com.uce.floracare.repositories.connections.remote.firebase.StorageManager
 import com.uce.floracare.databinding.FragmentAddPlantBinding
+import com.uce.floracare.repositories.connections.remote.cloudinary.CloudinaryService
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
+import java.io.File
 import java.util.Calendar
+import kotlin.coroutines.resume
 
 class AddPlantFragment : Fragment() {
 
@@ -47,6 +59,8 @@ class AddPlantFragment : Fragment() {
     private var originalPlantName: String? = null
     private var originalPlantImage: String? = null
     private var originalTempDescription: String? = null
+
+    private var db = Firebase.firestore
 
     private val viewModel: AddPlantViewModel by viewModels {
         object : ViewModelProvider.Factory {
@@ -89,10 +103,12 @@ class AddPlantFragment : Fragment() {
 
         cameraManager = CameraManager(requireContext())
 
+        // Inicializar credenciales de Cloudinary
+        initVariables()
+
         setupDropdowns()
         setupObservers()
         initListeners()
-
         // Recuperar datos pasados desde ExploreFragment (después de setupDropdowns para AutoCompleteTextView)
         populateFormFromArguments()
     }
@@ -267,24 +283,79 @@ class AddPlantFragment : Fragment() {
 
 
     private fun savePlantData() {
-        val plantEntity = buildPlantEntity()
-
-        // Flujo "Explorar": verificar si el nombre común y la foto no han sido modificados
-        if (isExploreFlow) {
-            val currentName = binding.etPlantName.text.toString().trim()
-            val nameUnchanged = !currentName.isNullOrBlank() && currentName == originalPlantName
-            val photoUnchanged = viewModel.selectedPhotoUri == null
-
-            if (nameUnchanged && photoUnchanged) {
-                showUnsavedAlert(plantEntity)
-                return
-            }
+        val photoUri = viewModel.selectedPhotoUri
+        
+        // Si no hay foto nueva y no venimos de "Explorar", es error
+        if (photoUri == null && !isExploreFlow) {
+            Toast.makeText(requireContext(), "Debes capturar una foto", Toast.LENGTH_SHORT).show()
+            return
         }
 
-        viewModel.savePlant(plantEntity)
+        lifecycleScope.launch {
+            setLoadingState(true)
+
+            val finalImageUrl: String? = if (photoUri != null) {
+                // Hay una foto nueva, subirla a Cloudinary
+                subirImagenYObtenerUrl(photoUri)
+            } else {
+                // No hay foto nueva, mantener la original (si existe)
+                originalPlantImage
+            }
+
+            if (finalImageUrl != null) {
+                val plantEntity = buildPlantEntity(finalImageUrl)
+
+                // Flujo "Explorar": verificar si hubo cambios reales
+                if (isExploreFlow) {
+                    val currentName = binding.etPlantName.text.toString().trim()
+                    val nameUnchanged = currentName == originalPlantName
+                    val photoUnchanged = photoUri == null
+
+                    if (nameUnchanged && photoUnchanged) {
+                        setLoadingState(false)
+                        showUnsavedAlert(plantEntity)
+                        return@launch
+                    }
+                }
+
+                viewModel.savePlant(plantEntity)
+            } else {
+                setLoadingState(false)
+                Toast.makeText(requireContext(), "Error al procesar la imagen", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
-    private fun buildPlantEntity(): PlantEntity {
+    private suspend fun subirImagenYObtenerUrl(uri: Uri): String? = withContext(Dispatchers.IO) {
+        suspendCancellableCoroutine { continuation ->
+            // Convertimos Uri a File para usar el CloudinaryService existente
+            val file = uriToFile(uri)
+            if (file != null && file.exists()) {
+                CloudinaryService.subirImagenFirmada(file) { success, result ->
+                    if (success) {
+                        continuation.resume(result) // result es la URL
+                    } else {
+                        continuation.resume(null)
+                    }
+                }
+            } else {
+                continuation.resume(null)
+            }
+        }
+    }
+
+    private fun uriToFile(uri: Uri): File? {
+        // En este proyecto, CameraManager guarda en context.externalCacheDir
+        // Intentamos obtener el archivo directamente si es posible
+        return try {
+            val fileName = uri.lastPathSegment ?: "temp_img.jpg"
+            File(requireContext().externalCacheDir, fileName)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private fun buildPlantEntity(imageUrl: String): PlantEntity {
         val plantName = binding.etPlantName.text.toString().trim()
         val plantSpecies = binding.etPlantSpecies.text.toString().trim()
         val type = binding.autoCompleteType.text.toString().trim()
@@ -315,12 +386,6 @@ class AddPlantFragment : Fragment() {
             toxicaMascotas = binding.chipToxicPets.isChecked
         )
 
-        val imagen = if (isExploreFlow && viewModel.selectedPhotoUri == null) {
-            originalPlantImage ?: ""
-        } else {
-            viewModel.selectedPhotoUri?.toString() ?: ""
-        }
-
         return PlantEntity(
             nombreComun = plantName,
             nombreCientifico = plantSpecies,
@@ -332,7 +397,7 @@ class AddPlantFragment : Fragment() {
             riego = Riego(frecuencia = wateringFreq, cadaValor = wateringValue),
             luzSolar = sunlight,
             temperatura = Temperatura(min = tempMin, max = tempMax, descripcion = originalTempDescription ?: "Personalizada"),
-            imagen = imagen
+            imagen = imageUrl
         )
     }
 
@@ -383,6 +448,45 @@ class AddPlantFragment : Fragment() {
             }
             fragment.arguments = args
             return fragment
+        }
+    }
+
+    private fun subirImagen(){
+        val archivoCache = File(requireContext().cacheDir, "img_temp.jpg")
+
+        CloudinaryService.subirImagenFirmada(archivoCache){
+                isExitoso, resultado ->
+
+            lifecycleScope.launch(Dispatchers.IO) {
+                val resultText = if(isExitoso){
+                    "La imagen se subio correctamente en ${resultado}"
+                }else{
+                    "Error: ${resultado}"
+                }
+
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        requireContext(),
+                        resultText,
+                        Toast.LENGTH_SHORT
+                    )
+                        .show()
+                }
+            }
+        }
+    }
+
+    private fun initVariables() {
+        db = Firebase.firestore
+        try {
+            val config = mapOf(
+                "cloud_name" to "deqhd3bmp",
+                "api_key" to "188973848385489",
+                "api_secret" to "bmPFYmcccVKbOhp5g0U6LyHn8aE"
+            )
+            MediaManager.init(requireContext(), config)
+        } catch (e: Exception) {
+            // Ya inicializado
         }
     }
 }

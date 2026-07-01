@@ -262,14 +262,9 @@ class DetallePlantaFragment : Fragment() {
 
 
     private fun eliminarPlanta(){
-
         viewLifecycleOwner.lifecycleScope.launch {
-
-            val result=
-
-                eliminarUseCase(
-                    plant.firestoreId
-                )
+            // Pasamos el objeto 'plant' completo para que el UseCase pueda obtener la URL de la imagen
+            val result = eliminarUseCase(plant)
 
             if(result.isSuccess){
 

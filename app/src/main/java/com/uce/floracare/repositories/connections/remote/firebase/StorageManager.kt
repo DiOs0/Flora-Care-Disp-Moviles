@@ -104,6 +104,12 @@ class StorageManager(private val context: Context) {
      */
     suspend fun saveImageLocally(uri: Uri): Result<String> = withContext(Dispatchers.IO) {
         try {
+            // Si la URI ya es una URL de Cloudinary (HTTPS), no necesitamos guardarla localmente como un archivo del ContentResolver
+            if (uri.scheme == "http" || uri.scheme == "https") {
+                Log.d("StorageManager", "La URI es remota (Cloudinary), saltando guardado local: $uri")
+                return@withContext Result.success(uri.toString())
+            }
+
             val inputStream = context.contentResolver.openInputStream(uri)
                 ?: return@withContext Result.failure(Exception("No se pudo abrir el archivo original"))
 

@@ -73,6 +73,8 @@ class AddPlantViewModel(private val repository: PlantRepository) : ViewModel() {
             val result = if (fromExplore && selectedPhotoUri == null) {
                 repository.savePlantDirectly(plantVM)
             } else {
+                // El Repositorio llama a storageManager.saveImageLocally
+                // Pasamos la URL de Cloudinary como Uri. Si ya es HTTPS, saveImageLocally la devolverá sin intentar abrirla como archivo
                 repository.saveNewPlant(
                     plantVM, plantVM.imagen.toUri()
                 )

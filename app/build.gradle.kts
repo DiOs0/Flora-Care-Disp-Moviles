@@ -79,5 +79,7 @@ dependencies {
 
     implementation(libs.picasso)
 
+    implementation("com.cloudinary:cloudinary-android:2.4.0")
+
 
 }
