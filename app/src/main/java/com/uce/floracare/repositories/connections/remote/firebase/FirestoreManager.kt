@@ -3,6 +3,7 @@ package com.uce.floracare.repositories.connections.remote.firebase
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.uce.floracare.data.remote.dto.PlantEntity
+import com.uce.floracare.domain.model.TaskEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
@@ -38,36 +39,35 @@ class FirestoreManager(private val authManager: AuthManager) {
     /**
      * Obtiene solo las plantas pertenecientes al usuario actual (Su Jardín).
      */
-    suspend fun getUserPlants():
-            Result<List<PlantEntity>>
-            = withContext(Dispatchers.IO){
+    suspend fun getUserPlants(): Result<List<PlantEntity>> = withContext(Dispatchers.IO) {
 
-        try{
+        try {
 
-            val snapshot=
+            val snapshot =
                 getMyPlantsCollection()
                     .get()
                     .await()
 
-            val plants=
-                snapshot.documents.mapNotNull{
+            val plants =
+                snapshot.documents.mapNotNull { document ->
 
-                    val plant=
-                        it.toObject(
+                    val plant =
+                        document.toObject(
                             PlantEntity::class.java
                         )
 
-                    plant?.copy(
-                        firestoreId=
-                            it.id
-                    )
+                    plant?.apply {
+
+                        firestoreId =
+                            document.id
+
+                    }
 
                 }
 
             Result.success(plants)
 
-        }
-        catch(e:Exception){
+        } catch (e: Exception) {
 
             Result.failure(e)
 
@@ -186,4 +186,140 @@ class FirestoreManager(private val authManager: AuthManager) {
         }
 
     }
+
+
+    //Esto e spara las Tareas Pendientes
+
+    suspend fun saveTask(
+        task: TaskEntity
+    ): Result<Unit> = withContext(Dispatchers.IO) {
+
+        try {
+
+            getTasksCollection()
+                .add(task)
+                .await()
+
+            Result.success(Unit)
+
+        } catch (e: Exception) {
+
+            Result.failure(e)
+
+        }
+
+    }
+
+    suspend fun getTasks(): Result<List<TaskEntity>> {
+
+        return try {
+
+            val snapshot =
+                getTasksCollection()
+                    .get()
+                    .await()
+
+            val tasks =
+                snapshot.documents.mapNotNull {
+
+                    it.toObject(TaskEntity::class.java)
+
+                }
+
+            Result.success(tasks)
+
+        } catch (e: Exception) {
+
+            Result.failure(e)
+
+        }
+
+    }
+
+    suspend fun getTaskById(
+        taskId: String
+    ): Result<TaskEntity> {
+
+        return try {
+
+            val snapshot =
+                getTasksCollection()
+                    .document(taskId)
+                    .get()
+                    .await()
+
+            val task =
+                snapshot.toObject(TaskEntity::class.java)
+
+            if (task != null)
+                Result.success(task)
+            else
+                Result.failure(
+                    Exception("La tarea no existe")
+                )
+
+        } catch (e: Exception) {
+
+            Result.failure(e)
+
+        }
+
+    }
+
+    suspend fun updateTask(
+        task: TaskEntity
+    ): Result<Unit> {
+
+        return try {
+
+            getTasksCollection()
+                .document(task.firestoreId)
+                .set(task)
+                .await()
+
+            Result.success(Unit)
+
+        } catch (e: Exception) {
+
+            Result.failure(e)
+
+        }
+
+    }
+
+    suspend fun deleteTask(
+        taskId: String
+    ): Result<Unit> {
+
+        return try {
+
+            getTasksCollection()
+                .document(taskId)
+                .delete()
+                .await()
+
+            Result.success(Unit)
+
+        } catch (e: Exception) {
+
+            Result.failure(e)
+
+        }
+
+    }
+
+
+
+    private fun getTasksCollection(): CollectionReference {
+
+        val userId =
+            authManager.getCurrentUserId()
+                ?: throw IllegalStateException("Usuario no autenticado")
+
+        return db
+            .collection("users")
+            .document(userId)
+            .collection("tasks")
+    }
+
 }

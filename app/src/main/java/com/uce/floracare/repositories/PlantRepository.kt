@@ -63,4 +63,51 @@ class PlantRepository(
     suspend fun deletePlant(firestoreId: String): Result<Unit> {
         return firestoreManager.deleteUserPlant(firestoreId)
     }
+
+
+    suspend fun getPlantByFirestoreId(
+
+        firestoreId: String
+
+    ): Result<PlantEntity> {
+
+        val result =
+            firestoreManager.getUserPlants()
+
+        return result.fold(
+
+            onSuccess = { list ->
+
+                val plant =
+                    list.find {
+
+                        it.firestoreId == firestoreId
+
+                    }
+
+                if (plant != null) {
+
+                    Result.success(plant)
+
+                } else {
+
+                    Result.failure(
+                        Exception("Planta no encontrada")
+                    )
+
+                }
+
+            },
+
+            onFailure = {
+
+                Result.failure(it)
+
+            }
+
+        )
+
+    }
+
+
 }

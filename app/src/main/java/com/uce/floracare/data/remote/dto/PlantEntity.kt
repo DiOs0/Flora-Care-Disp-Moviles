@@ -32,7 +32,13 @@ data class PlantEntity(
     val luzSolar: List<String> = emptyList(),
     @get:PropertyName("Temperatura")
     @field:PropertyName("Temperatura")
-    val temperatura: Temperatura = Temperatura()
+    val temperatura: Temperatura = Temperatura(),
+
+
+    //Esto es para calcular lo del riego
+    var ultimoRiego:Long = System.currentTimeMillis(),
+
+    var ultimaActualizacion:Long = System.currentTimeMillis()
 ) : Serializable
 
 data class Caracteristicas(
