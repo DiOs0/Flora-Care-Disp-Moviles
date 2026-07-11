@@ -6,51 +6,81 @@
     android:layout_height="match_parent"
     android:background="#F8F9F5">
 
-    <!-- HEADER -->
-    <LinearLayout
-        android:id="@+id/headerLayout"
-        android:layout_width="match_parent"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/headerContainer"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="20dp"
-        android:paddingTop="16dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
+        android:background="@color/white"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingTop="18dp"
+        android:paddingBottom="18dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <ImageView
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:src="@drawable/ic_launcher_foreground"
-            app:tint="#2D5A27"/>
 
-        <TextView
+        <!-- LOGO -->
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/imgBrandLogo"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@drawable/ic_logo"
+            android:scaleType="centerInside"
+            app:tint="@color/forest_green"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+
+        <!-- TITULO -->
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="FloraCare"
-            android:textStyle="bold"
-            android:textColor="#2D5A27"
-            android:textSize="18sp"
-            android:layout_marginStart="8dp"/>
+            android:orientation="vertical"
+            android:layout_marginStart="1dp"
+            app:layout_constraintStart_toEndOf="@id/imgBrandLogo"
+            app:layout_constraintTop_toTopOf="@id/imgBrandLogo"
+            app:layout_constraintBottom_toBottomOf="@id/imgBrandLogo">
 
-        <View
-            android:layout_width="0dp"
-            android:layout_height="1dp"
-            android:layout_weight="1"/>
 
+            <TextView
+                android:id="@+id/tvExploreTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="FloraCare"
+                android:textColor="@color/forest_green"
+                android:textSize="25sp"
+                android:textStyle="bold"
+                android:layout_marginStart="10dp"
+                app:layout_constraintStart_toEndOf="@id/imgBrandLogo"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"/>
+
+        </LinearLayout>
+
+
+        <!-- PERFIL -->
         <com.google.android.material.imageview.ShapeableImageView
-            android:layout_width="42dp"
-            android:layout_height="42dp"
+            android:id="@+id/ivProfile"
+            android:layout_width="46dp"
+            android:layout_height="46dp"
             android:src="@mipmap/ic_launcher_round"
             android:scaleType="centerCrop"
-            app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"/>
-    </LinearLayout>
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.FloraCare.Circle"/>
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- SCROLL -->
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:fillViewport="true"
-        app:layout_constraintTop_toBottomOf="@id/headerLayout"
+        app:layout_constraintTop_toBottomOf="@+id/headerContainer"
         app:layout_constraintBottom_toBottomOf="parent">
 
         <LinearLayout
@@ -215,42 +245,6 @@
                             app:thumbTint="@color/switch_thumb"
                             app:trackTint="@color/switch_track"/>
                     </LinearLayout>
-
-<!--                    &lt;!&ndash; ITEM &ndash;&gt;-->
-<!--                    <LinearLayout-->
-<!--                        android:layout_width="match_parent"-->
-<!--                        android:layout_height="wrap_content"-->
-<!--                        android:layout_marginTop="18dp"-->
-<!--                        android:gravity="center_vertical">-->
-
-<!--                        <LinearLayout-->
-<!--                            android:layout_width="0dp"-->
-<!--                            android:layout_height="wrap_content"-->
-<!--                            android:layout_weight="1"-->
-<!--                            android:orientation="vertical">-->
-
-<!--                            <TextView-->
-<!--                                android:text="Fertilización"-->
-<!--                                android:textStyle="bold"-->
-<!--                                android:textColor="#2D5A27"-->
-<!--                                android:layout_width="wrap_content"-->
-<!--                                android:layout_height="wrap_content"/>-->
-
-<!--                            <TextView-->
-<!--                                android:text="Ciclos de nutrientes orgánicos"-->
-<!--                                android:textSize="12sp"-->
-<!--                                android:textColor="#757872"-->
-<!--                                android:layout_width="wrap_content"-->
-<!--                                android:layout_height="wrap_content"/>-->
-<!--                        </LinearLayout>-->
-
-<!--                        <com.google.android.material.switchmaterial.SwitchMaterial-->
-<!--                            android:layout_width="wrap_content"-->
-<!--                            android:layout_height="wrap_content"-->
-<!--                            android:checked="true"-->
-<!--                            app:thumbTint="@color/switch_thumb"-->
-<!--                            app:trackTint="@color/switch_track"/>-->
-<!--                    </LinearLayout>-->
 
                     <!-- ITEM -->
                     <LinearLayout
@@ -555,8 +549,9 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnCerrarSesion"
                 android:layout_width="match_parent"
-                android:layout_height="54dp"
+                android:layout_height="60dp"
                 android:layout_marginTop="24dp"
+                android:textSize="18sp"
                 android:text="Cerrar Sesión"
                 android:textColor="@color/white"
                 android:backgroundTint="#2D5A27"

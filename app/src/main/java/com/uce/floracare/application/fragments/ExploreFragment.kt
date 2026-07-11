@@ -137,7 +137,6 @@ class ExploreFragment : Fragment() {
             }
 
             loadCatalog(null)
-            showLoading(false)
         }
     }
 
@@ -151,21 +150,52 @@ class ExploreFragment : Fragment() {
                 }
             }
             result.onSuccess { entities ->
+
                 catalogAdapter.submitFullList(entities)
+
+                showLoading(false)
+
                 val query = binding.etSearchPlants.text.toString()
+
                 if (query.isNotBlank()) {
+
                     val hasResults = catalogAdapter.filter(query)
-                    binding.tvNoResults.visibility = if (!hasResults) View.VISIBLE else View.GONE
+
+                    binding.tvNoResults.visibility =
+                        if (!hasResults) View.VISIBLE else View.GONE
                 }
             }
             result.onFailure { e ->
-                Toast.makeText(requireContext(), "Error al carrar catálogo: ${e.message}", Toast.LENGTH_SHORT).show()
+
+                showLoading(false)
+
+                Toast.makeText(
+                    requireContext(),
+                    "Error al cargar catálogo: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }
 
     private fun showLoading(show: Boolean) {
-        binding.progressBar.visibility = if (show) View.VISIBLE else View.GONE
+
+        if(show){
+
+            binding.loadingContainer.visibility = View.VISIBLE
+            binding.loadingAnimation.playAnimation()
+
+            binding.rvCatalogPlants.visibility = View.GONE
+            binding.rvFeaturedPlants.visibility = View.GONE
+
+        }else{
+
+            binding.loadingAnimation.cancelAnimation()
+            binding.loadingContainer.visibility = View.GONE
+
+            binding.rvCatalogPlants.visibility = View.VISIBLE
+            binding.rvFeaturedPlants.visibility = View.VISIBLE
+        }
     }
 
     override fun onDestroyView() {

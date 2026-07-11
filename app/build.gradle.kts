@@ -81,5 +81,8 @@ dependencies {
 
     implementation("com.cloudinary:cloudinary-android:2.4.0")
 
+    //lottie
+    implementation(libs.lottie)
+
 
 }

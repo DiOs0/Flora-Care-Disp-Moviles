@@ -70,7 +70,7 @@
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="32dp"
         android:layout_marginTop="8dp"
-        android:hint="ejmplo@correo.com"
+        android:hint="ejemplo@correo.com"
         android:textColorHint="#555555"
         app:boxBackgroundColor="@android:color/transparent"
         app:boxStrokeColor="#555555"
