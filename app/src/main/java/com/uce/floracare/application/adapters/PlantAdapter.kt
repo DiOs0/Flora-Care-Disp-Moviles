@@ -1,4 +1,4 @@
-package com.uce.floracare.activities.Osorio_Explore
+package com.uce.floracare.application.adapters
 
 import android.graphics.drawable.GradientDrawable
 import android.view.LayoutInflater
@@ -13,18 +13,24 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.uce.floracare.R
 import com.uce.floracare.data.remote.dto.PlantEntity
+import com.uce.floracare.databinding.ItemPlantCardBinding
 
 class PlantAdapter(
     private val onPlantClick: (PlantEntity) -> Unit,
-    private val layoutRes: Int
+    private val layoutRes: Int? = null
 ) : ListAdapter<PlantEntity, PlantAdapter.PlantViewHolder>(DiffCallback) {
 
-    var fullList: List<PlantEntity> = emptyList()
-        private set
+    private var fullList: List<PlantEntity> = emptyList()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PlantViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(layoutRes, parent, false)
-        return PlantViewHolder(view)
+        val layoutInflater = LayoutInflater.from(parent.context)
+        return if (layoutRes != null) {
+            val view = layoutInflater.inflate(layoutRes, parent, false)
+            PlantViewHolder(view)
+        } else {
+            val binding = ItemPlantCardBinding.inflate(layoutInflater, parent, false)
+            PlantViewHolder(binding.root, binding)
+        }
     }
 
     override fun onBindViewHolder(holder: PlantViewHolder, position: Int) {
@@ -49,39 +55,47 @@ class PlantAdapter(
         return filtered.isNotEmpty()
     }
 
-    inner class PlantViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val ivImage: ImageView = itemView.findViewById(R.id.ivPlantImage)
-        private val tvName: TextView = itemView.findViewById(R.id.tvPlantName)
-        private val tvScientific: TextView = itemView.findViewById(R.id.tvPlantScientific)
-        private val tvTag: TextView? = itemView.findViewById(R.id.tvPlantTag)
-        private val tvCareLevel: TextView = itemView.findViewById(R.id.tvPlantCareLevel)
+    inner class PlantViewHolder(view: View, private val binding: ItemPlantCardBinding? = null) : RecyclerView.ViewHolder(view) {
+        private val ivImage: ImageView? = view.findViewById(R.id.ivPlantImage) ?: view.findViewById(R.id.imgPlantPhoto)
+        private val tvName: TextView? = view.findViewById(R.id.tvPlantName) ?: view.findViewById(R.id.txtPlantName)
+        private val tvScientific: TextView? = view.findViewById(R.id.tvPlantScientific) ?: view.findViewById(R.id.txtPlantSpecies)
+        private val tvTag: TextView? = view.findViewById(R.id.tvPlantTag)
+        private val tvCareLevel: TextView? = view.findViewById(R.id.tvPlantCareLevel)
 
         fun bind(plant: PlantEntity) {
-            Glide.with(ivImage.context)
-                .load(plant.imagen)
-                .placeholder(R.drawable.ic_launcher_foreground)
-                .error(R.drawable.ic_launcher_foreground)
-                .centerCrop()
-                .into(ivImage)
+            ivImage?.let {
+                Glide.with(it.context)
+                    .load(plant.imagen)
+                    .placeholder(R.drawable.ic_launcher_foreground)
+                    .error(R.drawable.ic_launcher_foreground)
+                    .centerCrop()
+                    .into(it)
+            }
 
-            tvName.text = plant.nombreComun
-            tvScientific.text = plant.nombreCientifico
+            tvName?.text = plant.nombreComun
+            tvScientific?.text = plant.nombreCientifico
 
             tvTag?.apply {
                 text = if (plant.caracteristicas.indoor) "Interior" else "Exterior"
                 visibility = View.VISIBLE
             }
 
-            setCareLevel(tvCareLevel, plant.nivelCuidado)
+            tvCareLevel?.let { setCareLevel(it, plant.nivelCuidado) }
+
+            // Lógica específica de ItemPlantCard (Reyes) si binding no es nulo
+            binding?.let {
+                // TODO: Implement watering badge logic if needed for MiJardin
+            }
+
             itemView.setOnClickListener { onPlantClick(plant) }
         }
     }
 
     private fun setCareLevel(textView: TextView, level: String) {
         val (text, dotColor, bgColor) = when (level.lowercase()) {
-            "low" -> Triple("Fácil", R.color.care_low, R.color.care_low_bg)
-            "medium", "moderate" -> Triple("Medio", R.color.care_medium, R.color.care_medium_bg)
-            "high" -> Triple("Avanzado", R.color.care_high, R.color.care_high_bg)
+            "bajo", "low" -> Triple("Fácil", R.color.care_low, R.color.care_low_bg)
+            "medio", "medium", "moderate" -> Triple("Medio", R.color.care_medium, R.color.care_medium_bg)
+            "alto", "high" -> Triple("Avanzado", R.color.care_high, R.color.care_high_bg)
             else -> Triple(level.ifEmpty { "\u2014" }, R.color.primary_green, R.color.accent_green)
         }
 
