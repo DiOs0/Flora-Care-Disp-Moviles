@@ -13,10 +13,17 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.uce.floracare.R
 import com.uce.floracare.data.remote.dto.PlantEntity
+import com.uce.floracare.data.remote.dto.calcularEstadoRiego
+import com.uce.floracare.domain.model.WateringStatus
 import com.uce.floracare.databinding.ItemPlantCardBinding
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.concurrent.TimeUnit
 
 class PlantAdapter(
     private val onPlantClick: (PlantEntity) -> Unit,
+    private val onEditWatering: ((PlantEntity) -> Unit)? = null,
     private val layoutRes: Int? = null
 ) : ListAdapter<PlantEntity, PlantAdapter.PlantViewHolder>(DiffCallback) {
 
@@ -82,12 +89,97 @@ class PlantAdapter(
 
             tvCareLevel?.let { setCareLevel(it, plant.nivelCuidado) }
 
-            // Lógica específica de ItemPlantCard (Reyes) si binding no es nulo
-            binding?.let {
-                // TODO: Implement watering badge logic if needed for MiJardin
+            // Lógica de Información de Riego (Último y Próximo)
+            binding?.let { b ->
+                val dateFormat = SimpleDateFormat("dd/MM", Locale.getDefault())
+                val lastDate = dateFormat.format(Date(plant.ultimoRiego))
+                val nextDateMillis = plant.ultimoRiego + TimeUnit.DAYS.toMillis(plant.wateringFrequencyDays.toLong())
+                val nextDate = dateFormat.format(Date(nextDateMillis))
+
+                b.txtLastWatered.text = "Último riego: $lastDate"
+                b.txtNextWatering.text = "Próximo riego: $nextDate"
+            }
+
+            // Lógica de Badge de Riego
+            binding?.let { b ->
+                val status = plant.calcularEstadoRiego()
+                updateWateringBadge(b, status)
+
+                // CASO B: Visualización de Alerta
+                if (status == WateringStatus.URGENTE) {
+                    b.root.setCardBackgroundColor(ContextCompat.getColor(itemView.context, R.color.alert_red_soft))
+                    b.root.strokeColor = ContextCompat.getColor(itemView.context, R.color.alert_red)
+                    b.txtHumidity.visibility = View.VISIBLE
+                    // Simulación de métrica falsa
+                    b.txtHumidity.text = "Humedad: 20%"
+                } else {
+                    b.root.setCardBackgroundColor(ContextCompat.getColor(itemView.context, R.color.white))
+                    b.root.strokeColor = ContextCompat.getColor(itemView.context, R.color.gris_linea)
+                    b.txtHumidity.visibility = View.GONE
+                }
+
+                // CASO C: Confirmación de Riego (Simulación al hacer clic largo o hover ficticio)
+                b.root.setOnLongClickListener {
+                    b.overlayConfirmWatering.visibility = View.VISIBLE
+                    true
+                }
+
+                b.chkConfirmWatering.setOnCheckedChangeListener { _, isChecked ->
+                    if (isChecked) {
+                        b.overlayConfirmWatering.visibility = View.GONE
+                        b.root.setCardBackgroundColor(ContextCompat.getColor(itemView.context, R.color.success_green_soft))
+                        b.root.strokeColor = ContextCompat.getColor(itemView.context, R.color.care_low)
+                        b.txtWatered.visibility = View.VISIBLE
+                        b.txtHumidity.visibility = View.GONE
+                        
+                        // Cambiar icono de badge a check
+                        b.badgeBackground.background = ContextCompat.getDrawable(itemView.context, R.drawable.circle_success_green)
+                        b.badgeIcon.setImageResource(android.R.drawable.ic_menu_compass) // Idealmente un check
+                        b.badgeIcon.setColorFilter(ContextCompat.getColor(itemView.context, R.color.white))
+                    }
+                }
+
+                b.btnEditWatering.setOnClickListener {
+                    onEditWatering?.invoke(plant)
+                }
             }
 
             itemView.setOnClickListener { onPlantClick(plant) }
+        }
+
+        private fun updateWateringBadge(b: ItemPlantCardBinding, status: WateringStatus) {
+            val ctx = b.root.context
+            val (bgColor, iconRes, iconTint) = when (status) {
+                WateringStatus.URGENTE -> Triple(
+                    R.color.care_high_bg, 
+                    android.R.drawable.ic_dialog_alert, 
+                    R.color.alert_red
+                )
+                WateringStatus.ATENCION_REQUERIDA -> Triple(
+                    R.color.care_medium_bg, 
+                    android.R.drawable.ic_popup_reminder, 
+                    R.color.care_medium
+                )
+                WateringStatus.NORMAL -> Triple(
+                    R.color.care_low_bg, 
+                    android.R.drawable.ic_menu_compass, // Temporalmente, idealmente una gota
+                    R.color.care_low
+                )
+            }
+
+            // Fondo con bordes redondeados y color suave
+            val drawable = GradientDrawable().apply {
+                shape = GradientDrawable.OVAL
+                setColor(ContextCompat.getColor(ctx, bgColor))
+                setStroke(2, ContextCompat.getColor(ctx, iconTint))
+            }
+            b.badgeBackground.background = drawable
+
+            // Icono con color vibrante
+            b.badgeIcon.setImageResource(iconRes)
+            b.badgeIcon.setColorFilter(ContextCompat.getColor(ctx, iconTint))
+            
+            b.badgeLayout.visibility = View.VISIBLE
         }
     }
 

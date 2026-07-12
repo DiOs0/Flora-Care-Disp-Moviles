@@ -15,40 +15,62 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.bumptech.glide.Glide
-import com.cloudinary.android.MediaManager
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.uce.floracare.R
 import com.uce.floracare.application.activities.Login
 import com.uce.floracare.application.viewmodels.AjustesUiState
 import com.uce.floracare.application.viewmodels.AjustesViewModel
 import com.uce.floracare.application.viewmodels.ViewModelFactory
+import com.uce.floracare.data.local.database.FloraCareDatabase
 import com.uce.floracare.databinding.FragmentAjustesBinding
-import com.uce.floracare.domain.usecase.GetUserProfileUC
+import com.uce.floracare.domain.usecase.*
+import com.uce.floracare.repositories.ImageRepositoryImpl
+import com.uce.floracare.repositories.PlantRepository
+import com.uce.floracare.repositories.TaskRepository
 import com.uce.floracare.repositories.UserRepository
+import com.uce.floracare.repositories.connections.remote.firebase.AuthManager
+import com.uce.floracare.repositories.connections.remote.firebase.FirestoreManager
+import com.uce.floracare.repositories.connections.remote.firebase.StorageManager
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.io.File
-import java.io.FileOutputStream
 
 class AjustesFragment : Fragment() {
 
     private var _binding: FragmentAjustesBinding? = null
     private val binding get() = _binding!!
 
-    private var selectedImageUri: Uri? = null
+    private var selectedImageFile: File? = null
 
     private val viewModel: AjustesViewModel by viewModels {
         ViewModelFactory {
-            AjustesViewModel(UserRepository(GetUserProfileUC()))
+            // Inicialización manual de dependencias (Simulando Inyección)
+            val authManager = AuthManager()
+            val firestoreManager = FirestoreManager(authManager)
+            val storageManager = StorageManager(requireContext())
+            val db = FloraCareDatabase.getDatabase(requireContext())
+            
+            val userRepository = UserRepository(GetUserProfileUC())
+            val plantRepository = PlantRepository(firestoreManager, storageManager, authManager, db.plantDao())
+            val taskRepository = TaskRepository(firestoreManager, authManager, db.taskDao())
+            val imageRepository = ImageRepositoryImpl()
+            
+            AjustesViewModel(
+                obtenerPerfilUsuarioUseCase = ObtenerPerfilUsuarioUseCase(userRepository),
+                actualizarPerfilUsuarioUseCase = ActualizarPerfilUsuarioUseCase(userRepository),
+                cerrarSesionUseCase = CerrarSesionUseCase(userRepository),
+                subirImagenUseCase = SubirImagenUseCase(imageRepository),
+                obtenerEstadisticasJardinUseCase = ObtenerEstadisticasJardinUseCase(plantRepository, taskRepository, authManager)
+            )
         }
     }
 
-    private val galleryLauncher = registerForActivityResult(
+    private val pickImageLauncher = registerForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
-            selectedImageUri = it
-            Glide.with(this).load(it).circleCrop().into(binding.imgPerfil)
-            showEditMode(true)
+            binding.imgPerfil.setImageURI(it)
+            selectedImageFile = uriToFile(it)
+            binding.btnGuardarPerfil.isVisible = true
         }
     }
 
@@ -62,54 +84,71 @@ class AjustesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        initCloudinary()
-        setupObservers()
         setupListeners()
+        setupObservers()
+        viewModel.loadUserProfile()
+    }
 
-        if (viewModel.uiState.value is AjustesUiState.Idle) {
-            viewModel.loadUserProfile()
+    private fun setupListeners() {
+        binding.btnEditPhoto.setOnClickListener {
+            pickImageLauncher.launch("image/*")
+        }
+
+        binding.tvNombre.setOnClickListener {
+            toggleEditName(true)
+        }
+
+        binding.btnGuardarPerfil.setOnClickListener {
+            val newName = binding.etNombre.text.toString().trim()
+            viewModel.updateProfile(newName, selectedImageFile)
+        }
+
+        binding.btnCerrarSesion.setOnClickListener {
+            viewModel.logout()
         }
     }
 
-    private fun initCloudinary() {
-        try {
-            val config = mapOf(
-                "cloud_name" to "deqhd3bmp",
-                "api_key" to "188973848385489",
-                "api_secret" to "bmPFYmcccVKbOhp5g0U6LyHn8aE"
-            )
-            MediaManager.init(requireContext(), config)
-        } catch (e: Exception) { /* Ya inicializado */ }
+    private fun toggleEditName(isEditing: Boolean) {
+        binding.tilNombre.isVisible = isEditing
+        binding.tvNombre.isVisible = !isEditing
+        binding.btnGuardarPerfil.isVisible = isEditing || selectedImageFile != null
+        if (isEditing) {
+            binding.etNombre.setText(binding.tvNombre.text)
+            binding.etNombre.requestFocus()
+        }
     }
 
     private fun setupObservers() {
+        // Observar Perfil y Estado General
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { state ->
                     when (state) {
-                        is AjustesUiState.Loading -> setLoadingState(true)
+                        is AjustesUiState.Loading -> showLoading(true)
                         is AjustesUiState.Success -> {
-                            setLoadingState(false)
-                            showEditMode(false)
-                            val profile = state.profile
-                            binding.tvNombre.text = profile.name
-                            binding.tvCorreo.text = profile.email
+                            showLoading(false)
+                            toggleEditName(false)
+                            selectedImageFile = null
+                            
+                            binding.tvNombre.text = state.profile.name
+                            binding.tvCorreo.text = state.profile.email
+                            
                             Glide.with(this@AjustesFragment)
-                                .load(profile.photoUrl)
+                                .load(state.profile.photoUrl)
                                 .placeholder(R.drawable.baseline_person_24)
-                                .error(R.drawable.baseline_person_24)
-                                .circleCrop()
                                 .into(binding.imgPerfil)
+                            
+                            Glide.with(this@AjustesFragment)
+                                .load(state.profile.photoUrl)
+                                .placeholder(R.mipmap.ic_launcher_round)
+                                .into(binding.ivProfile)
                         }
                         is AjustesUiState.Error -> {
-                            setLoadingState(false)
+                            showLoading(false)
                             Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
                         }
                         is AjustesUiState.Logout -> {
-                            val intent = Intent(requireContext(), Login::class.java).apply {
-                                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                            }
-                            startActivity(intent)
+                            startActivity(Intent(requireContext(), Login::class.java))
                             requireActivity().finish()
                         }
                         is AjustesUiState.Idle -> {}
@@ -117,52 +156,39 @@ class AjustesFragment : Fragment() {
                 }
             }
         }
-    }
 
-    private fun setupListeners() {
-        binding.btnEditPhoto.setOnClickListener { galleryLauncher.launch("image/*") }
-        binding.tvNombre.setOnClickListener { showEditMode(true) }
-        binding.btnGuardarPerfil.setOnClickListener { handleSaveAction() }
-        binding.btnCerrarSesion.setOnClickListener { showLogoutDialog() }
-    }
-
-    private fun handleSaveAction() {
-        val nuevoNombre = binding.etNombre.text.toString().trim()
-        val file = selectedImageUri?.let { uriToFile(it) }
-        viewModel.updateProfile(nuevoNombre, file)
-    }
-
-    private fun showEditMode(edit: Boolean) {
-        binding.tilNombre.isVisible = edit
-        binding.btnGuardarPerfil.isVisible = edit
-        binding.tvNombre.isVisible = !edit
-        if (edit && binding.etNombre.text.isNullOrBlank()) {
-            binding.etNombre.setText(binding.tvNombre.text)
+        // Observar Estadísticas de forma independiente (Reactividad SSOT)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.estadisticas.collect { stats ->
+                    binding.apply {
+                        tvTotalPlantas.text = stats.totalPlantas.toString()
+                        tvTareasPendientes.text = stats.tareasPendientes.toString()
+                        tvSaludGeneral.text = "${stats.saludGeneral}%"
+                    }
+                }
+            }
         }
+    }
+
+    private fun showLoading(isLoading: Boolean) {
+        binding.btnGuardarPerfil.isEnabled = !isLoading
+        binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
     }
 
     private fun uriToFile(uri: Uri): File? {
         return try {
-            val file = File(requireContext().cacheDir, "profile_temp.jpg")
-            requireContext().contentResolver.openInputStream(uri)?.use { input ->
-                FileOutputStream(file).use { output -> input.copyTo(output) }
+            val inputStream = requireContext().contentResolver.openInputStream(uri)
+            val file = File(requireContext().cacheDir, "temp_profile_img_${System.currentTimeMillis()}.jpg")
+            inputStream?.use { input ->
+                file.outputStream().use { output ->
+                    input.copyTo(output)
+                }
             }
             file
-        } catch (e: Exception) { null }
-    }
-
-    private fun setLoadingState(loading: Boolean) {
-        binding.progressBar.isVisible = loading
-        binding.btnGuardarPerfil.isEnabled = !loading
-    }
-
-    private fun showLogoutDialog() {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Cerrar Sesión")
-            .setMessage("¿Está seguro de cerrar sesión?")
-            .setPositiveButton("Sí") { _, _ -> viewModel.logout() }
-            .setNegativeButton("No", null)
-            .show()
+        } catch (e: Exception) {
+            null
+        }
     }
 
     override fun onDestroyView() {

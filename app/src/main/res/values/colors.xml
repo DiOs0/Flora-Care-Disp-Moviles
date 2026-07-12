@@ -24,6 +24,9 @@
     <color name="forest_dark">#1B331E</color>
     <color name="pale_green">#E8EFE6</color>
     <color name="alert_red">#E05345</color>
+    <color name="alert_red_soft">#FFF5F5</color>
+    <color name="success_green_soft">#F0FFF4</color>
+    <color name="water_blue">#3182CE</color>
     <color name="text_slate">#203622</color>
 
     <!-- Originales compatibles -->

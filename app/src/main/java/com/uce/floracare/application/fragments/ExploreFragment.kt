@@ -19,10 +19,15 @@ import com.uce.floracare.application.adapters.PlantAdapter
 import com.uce.floracare.application.viewmodels.ExploreUiState
 import com.uce.floracare.application.viewmodels.ExploreViewModel
 import com.uce.floracare.application.viewmodels.ViewModelFactory
+import com.uce.floracare.data.local.database.FloraCareDatabase
 import com.uce.floracare.data.remote.dto.PlantEntity
 import com.uce.floracare.databinding.FragmentExploreBinding
+import com.uce.floracare.domain.usecase.ObtenerCatalogoPlantasUseCase
+import com.uce.floracare.domain.usecase.SincronizarCatalogoUseCase
+import com.uce.floracare.repositories.PlantRepository
 import com.uce.floracare.repositories.connections.remote.firebase.AuthManager
 import com.uce.floracare.repositories.connections.remote.firebase.FirestoreManager
+import com.uce.floracare.repositories.connections.remote.firebase.StorageManager
 import kotlinx.coroutines.launch
 
 class ExploreFragment : Fragment() {
@@ -31,7 +36,19 @@ class ExploreFragment : Fragment() {
 
     private val viewModel: ExploreViewModel by viewModels {
         ViewModelFactory {
-            ExploreViewModel(FirestoreManager(AuthManager()))
+            val authManager = AuthManager()
+            val firestoreManager = FirestoreManager(authManager)
+            val database = FloraCareDatabase.getDatabase(requireContext())
+            val plantRepository = PlantRepository(
+                firestoreManager,
+                StorageManager(requireContext()),
+                authManager,
+                database.plantDao()
+            )
+            ExploreViewModel(
+                obtenerCatalogoPlantasUseCase = ObtenerCatalogoPlantasUseCase(plantRepository),
+                sincronizarCatalogoUseCase = SincronizarCatalogoUseCase(plantRepository)
+            )
         }
     }
 

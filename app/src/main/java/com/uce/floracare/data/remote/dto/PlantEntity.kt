@@ -2,7 +2,9 @@ package com.uce.floracare.data.remote.dto
 
 import com.google.firebase.firestore.PropertyName
 import com.uce.floracare.data.local.dto.PerenualResponse
+import com.uce.floracare.domain.model.WateringStatus
 import java.io.Serializable
+import java.util.concurrent.TimeUnit
 
 /*
     * DE AQUI ES EL MODELO DEL JSON PARA AGREGAR PLANTAS A LA BASE DE DATOS
@@ -38,7 +40,9 @@ data class PlantEntity(
     //Esto es para calcular lo del riego
     var ultimoRiego:Long = System.currentTimeMillis(),
 
-    var ultimaActualizacion:Long = System.currentTimeMillis()
+    var ultimaActualizacion:Long = System.currentTimeMillis(),
+
+    var wateringFrequencyDays: Int = 7
 ) : Serializable
 
 data class Caracteristicas(
@@ -125,4 +129,19 @@ fun PerenualResponse.toPlantEntity(): PlantEntity {
             descripcion = tempDesc
         )
     )
+}
+
+/**
+ * Calcula el estado de riego basado en la fecha actual, el último riego y la frecuencia.
+ */
+fun PlantEntity.calcularEstadoRiego(): WateringStatus {
+    val hoy = System.currentTimeMillis()
+    val diferenciaMillis = hoy - ultimoRiego
+    val diasTranscurridos = TimeUnit.MILLISECONDS.toDays(diferenciaMillis).toInt()
+
+    return when {
+        diasTranscurridos >= wateringFrequencyDays + 2 -> WateringStatus.URGENTE
+        diasTranscurridos >= wateringFrequencyDays -> WateringStatus.ATENCION_REQUERIDA
+        else -> WateringStatus.NORMAL
+    }
 }

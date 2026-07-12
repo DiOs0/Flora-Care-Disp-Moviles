@@ -36,11 +36,12 @@
 
         <!-- TITULO -->
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:layout_marginStart="1dp"
             app:layout_constraintStart_toEndOf="@id/imgBrandLogo"
+            app:layout_constraintEnd_toStartOf="@id/btnSearch"
             app:layout_constraintTop_toTopOf="@id/imgBrandLogo"
             app:layout_constraintBottom_toBottomOf="@id/imgBrandLogo">
 
@@ -53,12 +54,35 @@
                 android:textColor="@color/forest_green"
                 android:textSize="25sp"
                 android:textStyle="bold"
-                android:layout_marginStart="10dp"
-                app:layout_constraintStart_toEndOf="@id/imgBrandLogo"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"/>
+                android:layout_marginStart="10dp"/>
 
         </LinearLayout>
+
+        <!-- BUSCAR -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSearch"
+            style="@style/Widget.Material3.Button.IconButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="4dp"
+            app:icon="@android:drawable/ic_menu_search"
+            app:iconTint="@color/forest_green"
+            app:layout_constraintEnd_toStartOf="@id/btnAddPlant"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+        <!-- AÑADIR -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnAddPlant"
+            style="@style/Widget.Material3.Button.IconButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="8dp"
+            app:icon="@android:drawable/ic_input_add"
+            app:iconTint="@color/forest_green"
+            app:layout_constraintEnd_toStartOf="@id/ivProfile"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
 
 
         <!-- PERFIL -->

@@ -9,97 +9,200 @@
     app:strokeWidth="1.2dp"
     app:strokeColor="#EEF2EC"
     app:cardBackgroundColor="@color/white"
-    app:cardElevation="1dp">
+    app:cardElevation="2dp">
 
-    <RelativeLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:orientation="vertical"
         android:padding="12dp">
 
-        <!-- Imagen de la Planta -->
-        <com.google.android.material.imageview.ShapeableImageView
-            android:id="@+id/imgPlantPhoto"
+        <!-- Contenedor Superior (Imagen + Badges) -->
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="120dp"
-            android:src="@android:drawable/sym_def_app_icon"
-            android:scaleType="centerCrop"
-             />
+            android:layout_height="130dp">
 
-        <!-- Alerta Badge Circular de Riego (Rojo si necesita, verde si está OK) -->
-        <FrameLayout
-            android:id="@+id/badgeLayout"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:layout_alignParentEnd="true"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="8dp">
-
-            <View
-                android:id="@+id/badgeBackground"
+            <!-- Imagen de la Planta -->
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/imgPlantPhoto"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@drawable/circle_alert_red" />
+                android:scaleType="centerCrop"
+                android:src="@android:drawable/sym_def_app_icon"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Medium" />
 
-            <ImageView
-                android:id="@+id/badgeIcon"
-                android:layout_width="16dp"
-                android:layout_height="16dp"
-                android:layout_gravity="center"
-                android:src="@android:drawable/ic_menu_compass"
-                app:tint="@color/white" />
-        </FrameLayout>
+            <!-- Overlay de Confirmación de Riego -->
+            <FrameLayout
+                android:id="@+id/overlayConfirmWatering"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="#A6FFFFFF"
+                android:visibility="gone">
 
-        <!-- Especie / Nombre Científico -->
-        <TextView
-            android:id="@+id/txtPlantSpecies"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/imgPlantPhoto"
-            android:layout_marginTop="10dp"
-            android:text="MONSTERA DELICIOSA"
-            android:textColor="#8C9C8A"
-            android:textSize="9sp"
-            android:textStyle="bold"
-            android:ellipsize="end"
-            android:singleLine="true" />
+                <com.google.android.material.checkbox.MaterialCheckBox
+                    android:id="@+id/chkConfirmWatering"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="Regar"
+                    android:textColor="@color/forest_green"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    app:buttonTint="@color/forest_green" />
+            </FrameLayout>
 
-        <!-- Apodo de la Planta -->
-        <TextView
-            android:id="@+id/txtPlantName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/txtPlantSpecies"
-            android:text="Monty"
-            android:textColor="@color/forest_dark"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:ellipsize="end"
-            android:singleLine="true" />
+            <!-- Alerta Badge Circular -->
+            <FrameLayout
+                android:id="@+id/badgeLayout"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_alignParentEnd="true"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp">
 
-        <!-- Iconos de Características al Pie -->
+                <View
+                    android:id="@+id/badgeBackground"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/circle_alert_red" />
+
+                <ImageView
+                    android:id="@+id/badgeIcon"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_gravity="center"
+                    android:src="@android:drawable/ic_menu_compass"
+                    app:tint="@color/white" />
+            </FrameLayout>
+
+            <!-- Botón de Edición Rápida -->
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/btnEditWatering"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="6dp"
+                android:layout_toStartOf="@id/badgeLayout"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:padding="5dp"
+                android:src="@android:drawable/ic_menu_edit"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"
+                app:tint="@color/text_gray" />
+
+        </RelativeLayout>
+
+        <!-- Información de la Planta (Cuerpo de la Card) -->
         <LinearLayout
-            android:id="@+id/layoutFeatureIcons"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@id/txtPlantName"
-            android:layout_marginTop="8dp"
-            android:orientation="horizontal">
+            android:orientation="vertical"
+            android:layout_marginTop="10dp">
 
-            <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:background="@drawable/circle_icon_gray"
-                android:src="@android:drawable/btn_star"
-                android:padding="3dp"
-                android:layout_marginEnd="4dp" />
+            <!-- Especie / Nombre Científico -->
+            <TextView
+                android:id="@+id/txtPlantSpecies"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:text="MONSTERA DELICIOSA"
+                android:textColor="#8C9C8A"
+                android:textSize="11sp"
+                android:textStyle="bold" />
 
-            <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:background="@drawable/circle_icon_gray"
-                android:src="@android:drawable/ic_dialog_info"
-                android:padding="3dp" />
+            <!-- Apodo de la Planta -->
+            <TextView
+                android:id="@+id/txtPlantName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:text="Monty"
+                android:textColor="@color/forest_dark"
+                android:textSize="25sp"
+                android:textStyle="bold" />
+
+            <!-- Métrica de Humedad / Estado -->
+            <TextView
+                android:id="@+id/txtHumidity"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Humedad: 20%"
+                android:textColor="@color/alert_red"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:visibility="gone"
+                android:layout_marginTop="2dp"/>
+
+            <TextView
+                android:id="@+id/txtWatered"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="¡Regada!"
+                android:textColor="#4CAF50"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:visibility="gone"
+                android:layout_marginTop="2dp"/>
+
+            <!-- Fechas de Riego -->
+            <LinearLayout
+                android:id="@+id/layoutWateringDates"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/txtLastWatered"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Último riego: --/--"
+                    android:textColor="@color/text_gray"
+                    android:textSize="15sp" />
+
+                <TextView
+                    android:id="@+id/txtNextWatering"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Próximo riego: --/--"
+                    android:textColor="@color/forest_green"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="1dp"/>
+            </LinearLayout>
+
+            <!-- Separador y Características -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp">
+
+                <LinearLayout
+                    android:id="@+id/layoutFeatureIcons"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_marginEnd="6dp"
+                        android:background="@drawable/circle_icon_gray"
+                        android:padding="4dp"
+                        android:src="@android:drawable/btn_star" />
+
+                    <ImageView
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:background="@drawable/circle_icon_gray"
+                        android:padding="4dp"
+                        android:src="@android:drawable/ic_dialog_info" />
+                </LinearLayout>
+
+            </RelativeLayout>
+
         </LinearLayout>
 
-    </RelativeLayout>
+    </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

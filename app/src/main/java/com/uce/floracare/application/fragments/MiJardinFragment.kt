@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -12,15 +11,22 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import com.uce.floracare.application.activities.MainActivity
 import com.uce.floracare.application.adapters.PlantAdapter
 import com.uce.floracare.application.adapters.reyes_milan_osorio.TaskAdapter
 import com.uce.floracare.application.viewmodels.MiJardinUiState
 import com.uce.floracare.application.viewmodels.MiJardinViewModel
 import com.uce.floracare.application.viewmodels.ViewModelFactory
+import com.uce.floracare.data.local.database.FloraCareDatabase
+import com.uce.floracare.data.remote.dto.PlantEntity
 import com.uce.floracare.databinding.ActivityMiJardinBinding
+import com.uce.floracare.R
+import com.uce.floracare.domain.usecase.ActualizarRiegoFrecuenciaUseCase
 import com.uce.floracare.domain.usecase.CompletarTareaPendienteUseCase
 import com.uce.floracare.domain.usecase.GenerarTareasPendientesUseCase
+import com.uce.floracare.domain.usecase.ObtenerPlantasJardinUseCase
 import com.uce.floracare.domain.usecase.ObtenerTareasPendientesUseCase
 import com.uce.floracare.repositories.PlantRepository
 import com.uce.floracare.repositories.TaskRepository
@@ -34,18 +40,36 @@ class MiJardinFragment : Fragment() {
     private var _binding: ActivityMiJardinBinding? = null
     private val binding get() = _binding!!
 
+    private val wateringOptions = mapOf(
+        "Cada día" to 1,
+        "Cada 2 días" to 2,
+        "Cada 3 días" to 3,
+        "Cada 5 días" to 5,
+        "Cada semana" to 7,
+        "Cada 10 días" to 10,
+        "Cada 2 semanas" to 14,
+        "Cada mes" to 30
+    )
+
     private val viewModel: MiJardinViewModel by viewModels {
         ViewModelFactory {
             val authManager = AuthManager()
             val firestoreManager = FirestoreManager(authManager)
-            val plantRepository = PlantRepository(firestoreManager, StorageManager(requireContext()))
-            val taskRepository = TaskRepository(firestoreManager)
+            val database = FloraCareDatabase.getDatabase(requireContext())
+            val plantRepository = PlantRepository(
+                firestoreManager, 
+                StorageManager(requireContext()), 
+                authManager,
+                database.plantDao()
+            )
+            val taskRepository = TaskRepository(firestoreManager, authManager, database.taskDao())
             
             MiJardinViewModel(
-                plantRepository,
-                GenerarTareasPendientesUseCase(plantRepository, taskRepository),
-                ObtenerTareasPendientesUseCase(taskRepository),
-                CompletarTareaPendienteUseCase(plantRepository, taskRepository)
+                obtenerPlantasJardinUseCase = ObtenerPlantasJardinUseCase(plantRepository, authManager),
+                generarTareasPendientesUseCase = GenerarTareasPendientesUseCase(plantRepository, taskRepository),
+                obtenerTareasPendientesUseCase = ObtenerTareasPendientesUseCase(taskRepository, authManager),
+                completarTareaPendienteUseCase = CompletarTareaPendienteUseCase(plantRepository, taskRepository),
+                actualizarRiegoFrecuenciaUseCase = ActualizarRiegoFrecuenciaUseCase(plantRepository)
             )
         }
     }
@@ -77,6 +101,9 @@ class MiJardinFragment : Fragment() {
                 val bundle = Bundle().apply { putSerializable("plant", plant) }
                 val fragment = DetallePlantaFragment().apply { arguments = bundle }
                 (activity as MainActivity).loadFragment(fragment)
+            },
+            onEditWatering = { plant ->
+                showEditWateringDialog(plant)
             }
         )
 
@@ -109,13 +136,50 @@ class MiJardinFragment : Fragment() {
                             binding.badgeRemaining.text = "${state.tasks.size} restantes"
                         }
                         is MiJardinUiState.Error -> {
-                            Toast.makeText(requireContext(), state.message, Toast.LENGTH_LONG).show()
+                            showErrorSnackbar(state.message)
                         }
                         is MiJardinUiState.Idle -> {}
+                        is MiJardinUiState.UpdateSuccess -> {
+                            showSuccessSnackbar("¡Frecuencia de riego actualizada!")
+                        }
                     }
                 }
             }
         }
+    }
+
+    private fun showSuccessSnackbar(message: String) {
+        Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT)
+            .setBackgroundTint(resources.getColor(R.color.care_low, null))
+            .setTextColor(resources.getColor(R.color.white, null))
+            .show()
+    }
+
+    private fun showErrorSnackbar(message: String) {
+        Snackbar.make(binding.root, message, Snackbar.LENGTH_INDEFINITE)
+            .setAction("REINTENTAR") {
+                viewModel.fetchData()
+            }
+            .setBackgroundTint(resources.getColor(R.color.alert_red, null))
+            .setActionTextColor(resources.getColor(R.color.white, null))
+            .show()
+    }
+
+    private fun showEditWateringDialog(plant: PlantEntity) {
+        val options = wateringOptions.keys.toTypedArray()
+        var selectedOption = options.find { wateringOptions[it] == plant.wateringFrequencyDays } ?: options[0]
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Editar Frecuencia de Riego")
+            .setSingleChoiceItems(options, options.indexOf(selectedOption)) { _, which ->
+                selectedOption = options[which]
+            }
+            .setPositiveButton("Actualizar") { _, _ ->
+                val frequency = wateringOptions[selectedOption] ?: 7
+                viewModel.actualizarFrecuenciaRiego(plant.firestoreId, frequency)
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
     override fun onDestroyView() {

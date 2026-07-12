@@ -22,16 +22,21 @@ import com.uce.floracare.application.activities.Login
 import com.uce.floracare.application.viewmodels.AddPlantUiState
 import com.uce.floracare.application.viewmodels.AddPlantViewModel
 import com.uce.floracare.application.viewmodels.ViewModelFactory
+import com.uce.floracare.data.local.database.FloraCareDatabase
 import com.uce.floracare.data.remote.dto.Caracteristicas
 import com.uce.floracare.data.remote.dto.PlantEntity
 import com.uce.floracare.data.remote.dto.Riego
 import com.uce.floracare.data.remote.dto.Temperatura
 import com.uce.floracare.databinding.FragmentAddPlantBinding
+import com.uce.floracare.domain.usecase.RegistrarPlantaEnJardinUseCase
+import com.uce.floracare.domain.usecase.SubirImagenUseCase
+import com.uce.floracare.repositories.ImageRepositoryImpl
 import com.uce.floracare.repositories.PlantRepository
 import com.uce.floracare.repositories.connections.remote.firebase.AuthManager
 import com.uce.floracare.repositories.connections.remote.firebase.FirestoreManager
 import com.uce.floracare.repositories.connections.remote.firebase.StorageManager
 import com.uce.floracare.utils.CameraManager
+import com.uce.floracare.utils.PlantConstants
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -50,10 +55,19 @@ class AddPlantFragment : Fragment() {
     private val viewModel: AddPlantViewModel by viewModels {
         ViewModelFactory {
             val authManager = AuthManager()
-            val storageManager = StorageManager(requireContext())
             val firestoreManager = FirestoreManager(authManager)
-            val repository = PlantRepository(firestoreManager, storageManager)
-            AddPlantViewModel(repository)
+            val database = FloraCareDatabase.getDatabase(requireContext())
+            val plantRepository = PlantRepository(
+                firestoreManager, 
+                StorageManager(requireContext()),
+                authManager,
+                database.plantDao()
+            )
+            val imageRepository = ImageRepositoryImpl()
+            AddPlantViewModel(
+                registrarPlantaEnJardinUseCase = RegistrarPlantaEnJardinUseCase(plantRepository),
+                subirImagenUseCase = SubirImagenUseCase(imageRepository)
+            )
         }
     }
 
@@ -100,13 +114,12 @@ class AddPlantFragment : Fragment() {
     }
 
     private fun setupDropdowns() {
-        val types = arrayOf("Suculenta", "Cactus", "Follaje", "Flor", "Arbusto", "Árbol")
-        val cycles = arrayOf("Perenne", "Anual", "Bienal")
-        val careLevels = arrayOf("Bajo", "Medio", "Alto")
+        binding.autoCompleteType.setAdapter(ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, PlantConstants.plantTypes))
+        binding.autoCompleteCycle.setAdapter(ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, PlantConstants.growthCycles))
+        binding.autoCompleteCareLevel.setAdapter(ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, PlantConstants.careLevels))
 
-        binding.autoCompleteType.setAdapter(ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, types))
-        binding.autoCompleteCycle.setAdapter(ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, cycles))
-        binding.autoCompleteCareLevel.setAdapter(ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, careLevels))
+        val freqOptions = PlantConstants.wateringOptions.keys.toTypedArray()
+        binding.autoCompleteWateringFreq.setAdapter(ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, freqOptions))
     }
 
     private fun setupObservers() {
@@ -193,6 +206,7 @@ class AddPlantFragment : Fragment() {
                 frecuencia = binding.etWateringFreq.text.toString().trim(),
                 cadaValor = binding.etWateringValue.text.toString().trim()
             ),
+            wateringFrequencyDays = PlantConstants.wateringOptions[binding.autoCompleteWateringFreq.text.toString()] ?: 7,
             luzSolar = binding.chipGroupSunlight.checkedChipIds.mapNotNull { id ->
                 when (id) {
                     binding.solDirecto.id -> "Sol Directo"
@@ -221,8 +235,14 @@ class AddPlantFragment : Fragment() {
 
     private fun uriToFile(uri: Uri): File? {
         return try {
-            val fileName = uri.lastPathSegment ?: "temp_img.jpg"
-            File(requireContext().externalCacheDir, fileName)
+            val inputStream = requireContext().contentResolver.openInputStream(uri)
+            val file = File(requireContext().cacheDir, "temp_img_${System.currentTimeMillis()}.jpg")
+            inputStream?.use { input ->
+                file.outputStream().use { output ->
+                    input.copyTo(output)
+                }
+            }
+            file
         } catch (e: Exception) {
             null
         }
@@ -258,6 +278,10 @@ class AddPlantFragment : Fragment() {
                     autoCompleteCareLevel.setText(entity.nivelCuidado, false)
                     etWateringFreq.setText(entity.riego.frecuencia)
                     etWateringValue.setText(entity.riego.cadaValor)
+                    
+                    val freqText = PlantConstants.wateringOptions.entries.find { it.value == entity.wateringFrequencyDays }?.key
+                    autoCompleteWateringFreq.setText(freqText, false)
+
                     etTempMin.setText(entity.temperatura.min.toString())
                     etTempMax.setText(entity.temperatura.max.toString())
 

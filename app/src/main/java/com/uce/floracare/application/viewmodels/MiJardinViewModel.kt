@@ -4,10 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.uce.floracare.data.remote.dto.PlantEntity
 import com.uce.floracare.domain.model.TaskEntity
+import com.uce.floracare.domain.usecase.ActualizarRiegoFrecuenciaUseCase
 import com.uce.floracare.domain.usecase.CompletarTareaPendienteUseCase
 import com.uce.floracare.domain.usecase.GenerarTareasPendientesUseCase
+import com.uce.floracare.domain.usecase.ObtenerPlantasJardinUseCase
 import com.uce.floracare.domain.usecase.ObtenerTareasPendientesUseCase
-import com.uce.floracare.repositories.PlantRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,13 +19,19 @@ sealed class MiJardinUiState {
     object Loading : MiJardinUiState()
     data class Success(val plants: List<PlantEntity>, val tasks: List<TaskEntity>) : MiJardinUiState()
     data class Error(val message: String) : MiJardinUiState()
+    object UpdateSuccess : MiJardinUiState()
 }
 
+/**
+ * ViewModel para Mi Jardín.
+ * Desacoplado de Repositorios mediante Use Cases.
+ */
 class MiJardinViewModel(
-    private val plantRepository: PlantRepository,
+    private val obtenerPlantasJardinUseCase: ObtenerPlantasJardinUseCase,
     private val generarTareasPendientesUseCase: GenerarTareasPendientesUseCase,
     private val obtenerTareasPendientesUseCase: ObtenerTareasPendientesUseCase,
-    private val completarTareaPendienteUseCase: CompletarTareaPendienteUseCase
+    private val completarTareaPendienteUseCase: CompletarTareaPendienteUseCase,
+    private val actualizarRiegoFrecuenciaUseCase: ActualizarRiegoFrecuenciaUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<MiJardinUiState>(MiJardinUiState.Idle)
@@ -33,45 +40,46 @@ class MiJardinViewModel(
     private var currentPlants: List<PlantEntity> = emptyList()
     private var currentTasks: List<TaskEntity> = emptyList()
 
-    fun fetchData() {
-        _uiState.value = MiJardinUiState.Loading
+    init {
+        observeData()
+    }
+
+    private fun observeData() {
+        // Observar Plantas (SSOT)
         viewModelScope.launch {
-            try {
-                // 1. Cargar Plantas
-                val plantsResult = plantRepository.getMyPlants()
-                plantsResult.onSuccess { plants ->
-                    currentPlants = plants
-                    // 2. Generar/Cargar Tareas
-                    generarTareas()
-                }.onFailure { e ->
-                    _uiState.value = MiJardinUiState.Error(e.localizedMessage ?: "Error al cargar plantas")
-                }
-            } catch (e: Exception) {
-                _uiState.value = MiJardinUiState.Error(e.localizedMessage ?: "Error inesperado")
+            obtenerPlantasJardinUseCase().collect { plants ->
+                currentPlants = plants
+                updateState()
             }
         }
+        // Observar Tareas (SSOT) - Nuevo requisito reactivo
+        viewModelScope.launch {
+            obtenerTareasPendientesUseCase().collect { tasks ->
+                currentTasks = tasks
+                updateState()
+            }
+        }
+    }
+
+    private fun updateState() {
+        // Solo mostramos Success si hay algo que mostrar o ya terminamos de cargar
+        _uiState.value = MiJardinUiState.Success(currentPlants, currentTasks)
+    }
+
+    fun fetchData() {
+        // fetchData ahora solo dispara la generación de tareas si es necesario, 
+        // la UI se actualizará sola gracias a los flows.
+        generarTareas()
     }
 
     private fun generarTareas() {
         viewModelScope.launch {
+            _uiState.value = MiJardinUiState.Loading
             val result = generarTareasPendientesUseCase()
-            result.onSuccess {
-                cargarTareas()
-            }.onFailure { e ->
+            result.onFailure { e ->
                 _uiState.value = MiJardinUiState.Error(e.localizedMessage ?: "Error al generar tareas")
             }
-        }
-    }
-
-    fun cargarTareas() {
-        viewModelScope.launch {
-            val result = obtenerTareasPendientesUseCase()
-            result.onSuccess { tasks ->
-                currentTasks = tasks
-                _uiState.value = MiJardinUiState.Success(currentPlants, currentTasks)
-            }.onFailure { e ->
-                _uiState.value = MiJardinUiState.Error(e.localizedMessage ?: "Error al cargar tareas")
-            }
+            // No necesitamos llamar a cargarTareas() porque el Flow de Room lo hará por nosotros
         }
     }
 
@@ -79,14 +87,24 @@ class MiJardinViewModel(
         viewModelScope.launch {
             _uiState.value = MiJardinUiState.Loading
             val result = completarTareaPendienteUseCase(task.firestoreId, task.plantFirestoreId)
-            result.fold(
-                onSuccess = {
-                    fetchData() // Recargar todo para actualizar estados
-                },
-                onFailure = { e ->
-                    _uiState.value = MiJardinUiState.Error(e.localizedMessage ?: "Error al completar tarea")
-                }
-            )
+            result.onFailure { e ->
+                _uiState.value = MiJardinUiState.Error(e.localizedMessage ?: "Error al completar tarea")
+            }
+            // El Flow se encargará de actualizar la lista tras el borrado en Firebase/Local
+        }
+    }
+
+    fun actualizarFrecuenciaRiego(plantId: String, frequency: Int) {
+        viewModelScope.launch {
+            _uiState.value = MiJardinUiState.Loading
+            val result = actualizarRiegoFrecuenciaUseCase(plantId, frequency)
+            result.onSuccess {
+                _uiState.value = MiJardinUiState.UpdateSuccess
+                // Restauramos el estado a Success para que la UI siga mostrando la lista
+                updateState()
+            }.onFailure { e ->
+                _uiState.value = MiJardinUiState.Error(e.localizedMessage ?: "Error al actualizar frecuencia")
+            }
         }
     }
 }

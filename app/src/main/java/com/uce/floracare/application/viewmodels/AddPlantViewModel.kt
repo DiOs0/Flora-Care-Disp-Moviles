@@ -1,21 +1,16 @@
 package com.uce.floracare.application.viewmodels
 
 import android.net.Uri
-import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.uce.floracare.data.remote.dto.PlantEntity
-import com.uce.floracare.repositories.PlantRepository
-import com.uce.floracare.repositories.connections.remote.cloudinary.CloudinaryService
-import kotlinx.coroutines.Dispatchers
+import com.uce.floracare.domain.usecase.RegistrarPlantaEnJardinUseCase
+import com.uce.floracare.domain.usecase.SubirImagenUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withContext
 import java.io.File
-import kotlin.coroutines.resume
 
 sealed class AddPlantUiState {
     object Idle : AddPlantUiState()
@@ -24,7 +19,14 @@ sealed class AddPlantUiState {
     data class Error(val message: String) : AddPlantUiState()
 }
 
-class AddPlantViewModel(private val repository: PlantRepository) : ViewModel() {
+/**
+ * ViewModel para agregar plantas.
+ * Desacoplado de Cloudinary y Repositorios mediante el Use Case RegistrarPlantaEnJardinUseCase.
+ */
+class AddPlantViewModel(
+    private val registrarPlantaEnJardinUseCase: RegistrarPlantaEnJardinUseCase,
+    private val subirImagenUseCase: SubirImagenUseCase
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AddPlantUiState>(AddPlantUiState.Idle)
     val uiState: StateFlow<AddPlantUiState> = _uiState.asStateFlow()
@@ -34,7 +36,7 @@ class AddPlantViewModel(private val repository: PlantRepository) : ViewModel() {
     var selectedLocation: String = "Interior"
 
     /**
-     * Valida y guarda la planta. Si hay una foto nueva, la sube a Cloudinary primero.
+     * Valida y delega el registro de la planta al Use Case.
      */
     fun savePlant(plant: PlantEntity, fromExplore: Boolean = false, photoFile: File? = null) {
         if (!validate(plant, fromExplore)) return
@@ -42,42 +44,33 @@ class AddPlantViewModel(private val repository: PlantRepository) : ViewModel() {
         viewModelScope.launch {
             _uiState.value = AddPlantUiState.Loading
 
-            try {
-                val finalImageUrl = if (photoFile != null) {
-                    subirACloudinary(photoFile) ?: throw Exception("Error al subir imagen a Cloudinary")
-                } else {
-                    plant.imagen
-                }
+            var finalPlant = plant
 
-                val plantToSave = plant.copy(imagen = finalImageUrl)
-                
-                val result = if (fromExplore && photoFile == null) {
-                    repository.savePlantDirectly(plantToSave)
-                } else {
-                    // El Repositorio maneja el guardado en Firestore y opcionalmente local
-                    repository.saveNewPlant(plantToSave, plantToSave.imagen.toUri())
-                }
-
-                result.fold(
-                    onSuccess = { 
-                        _uiState.value = AddPlantUiState.Success 
+            // 1. Si hay una nueva imagen, subirla
+            if (photoFile != null) {
+                val uploadResult = subirImagenUseCase(photoFile)
+                uploadResult.fold(
+                    onSuccess = { url ->
+                        finalPlant = plant.copy(imagen = url)
                     },
-                    onFailure = { error -> 
-                        _uiState.value = AddPlantUiState.Error(error.localizedMessage ?: "Error al guardar") 
+                    onFailure = { error ->
+                        _uiState.value = AddPlantUiState.Error("Error al subir imagen: ${error.localizedMessage}")
+                        return@launch
                     }
                 )
-            } catch (e: Exception) {
-                _uiState.value = AddPlantUiState.Error(e.localizedMessage ?: "Error inesperado")
             }
-        }
-    }
 
-    private suspend fun subirACloudinary(file: File): String? = withContext(Dispatchers.IO) {
-        suspendCancellableCoroutine { continuation ->
-            CloudinaryService.subirImagenFirmada(file) { success, result ->
-                if (success) continuation.resume(result)
-                else continuation.resume(null)
-            }
+            // 2. Registrar la planta
+            val result = registrarPlantaEnJardinUseCase(finalPlant)
+
+            result.fold(
+                onSuccess = { 
+                    _uiState.value = AddPlantUiState.Success 
+                },
+                onFailure = { error -> 
+                    _uiState.value = AddPlantUiState.Error(error.localizedMessage ?: "Error al guardar") 
+                }
+            )
         }
     }
 
