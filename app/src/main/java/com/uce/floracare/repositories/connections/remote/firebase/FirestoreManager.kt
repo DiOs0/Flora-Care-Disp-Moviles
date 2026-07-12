@@ -214,17 +214,19 @@ class FirestoreManager(private val authManager: AuthManager) {
 
         return try {
 
-            val snapshot =
-                getTasksCollection()
-                    .get()
-                    .await()
+            val snapshot = getTasksCollection()
+                .get()
+                .await()
 
-            val tasks =
-                snapshot.documents.mapNotNull {
+            val tasks = snapshot.documents.mapNotNull { document ->
 
-                    it.toObject(TaskEntity::class.java)
+                val task = document.toObject(TaskEntity::class.java)
 
+                task?.apply {
+                    firestoreId = document.id
                 }
+
+            }
 
             Result.success(tasks)
 
