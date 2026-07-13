@@ -100,4 +100,21 @@ dependencies {
     implementation("androidx.room:room-runtime:$roomVersion")
     ksp("androidx.room:room-compiler:$roomVersion")
     implementation("androidx.room:room-ktx:$roomVersion")
+
+    // Dependencia de Firebase Cloud Messaging
+    implementation("com.google.firebase:firebase-messaging")
+
+
+    // SDK de Autenticación de Google
+    implementation("com.google.android.gms:play-services-auth:21.2.0")
+
+    // Glide para la carga de imágenes (ya incluido en su stack) [3]
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+
+
+    // Credential Manager
+    implementation("androidx.credentials:credentials:1.5.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.5.0")
+    // Google Identity
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
 }

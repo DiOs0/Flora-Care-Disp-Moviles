@@ -6,17 +6,27 @@ import com.uce.floracare.domain.model.TaskEntity as DomainTaskEntity
 
 @Entity(tableName = "tasks")
 data class TaskEntity(
-    @PrimaryKey val firestoreId: String,
-    val plantFirestoreId: String,
-    val plantName: String,
-    val title: String,
-    val description: String,
-    val createdAt: Long,
-    val completed: Boolean,
-    val userId: String // Para filtrar por usuario en el SSOT
+
+    @PrimaryKey
+    val firestoreId: String = "",
+
+    val plantFirestoreId: String = "",
+
+    val plantName: String = "",
+
+    val title: String = "",
+
+    val description: String = "",
+
+    val createdAt: Long = 0L,
+
+    val completed: Boolean = false,
+
+    val userId: String = ""
 )
 
 fun TaskEntity.toDomain(): DomainTaskEntity {
+
     return DomainTaskEntity(
         firestoreId = firestoreId,
         plantFirestoreId = plantFirestoreId,
@@ -28,7 +38,10 @@ fun TaskEntity.toDomain(): DomainTaskEntity {
     )
 }
 
-fun DomainTaskEntity.toLocal(userId: String): TaskEntity {
+fun DomainTaskEntity.toLocal(
+    userId: String
+): TaskEntity {
+
     return TaskEntity(
         firestoreId = firestoreId,
         plantFirestoreId = plantFirestoreId,

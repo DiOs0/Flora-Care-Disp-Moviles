@@ -5,4 +5,8 @@
     <string name="pantalla_explorar">Pantalla de Explorar</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <string name="default_web_client_id">
+366477533697-111ci1rclgtg2a9lfrimoc21so02f735.apps.googleusercontent.com
+</string>
 </resources>

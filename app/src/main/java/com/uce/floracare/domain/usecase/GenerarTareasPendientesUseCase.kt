@@ -6,85 +6,103 @@ import com.uce.floracare.repositories.TaskRepository
 import java.util.concurrent.TimeUnit
 
 class GenerarTareasPendientesUseCase(
-
     private val plantRepository: PlantRepository,
     private val taskRepository: TaskRepository
-
 ) {
 
     suspend operator fun invoke(): Result<Unit> {
 
-        val plantsResult = plantRepository.getMyPlants()
+        return try {
 
-        if (plantsResult.isFailure) {
-            return Result.failure(plantsResult.exceptionOrNull()!!)
-        }
+            val plantas =
+                plantRepository
+                    .getMyPlants()
+                    .getOrThrow()
 
-        val tasksResult = taskRepository.getPendingTasks()
+            val tareasActuales =
+                taskRepository
+                    .getPendingTasks()
+                    .getOrThrow()
 
-        if (tasksResult.isFailure) {
-            return Result.failure(tasksResult.exceptionOrNull()!!)
-        }
+            val ahora =
+                System.currentTimeMillis()
 
-        val plantas = plantsResult.getOrThrow()
+            plantas.forEach { planta ->
 
-        val tareasActuales = tasksResult.getOrThrow()
-
-        val hoy = System.currentTimeMillis()
-
-        plantas.forEach { planta ->
-
-            val diasRiego =
-                planta.riego.cadaValor.toLongOrNull()
-                    ?: return@forEach
-
-            val diasTranscurridos =
-                TimeUnit.MILLISECONDS.toDays(
-                    hoy - planta.ultimoRiego
-                )
-
-            if (diasTranscurridos >= diasRiego) {
-
-                val yaExiste = tareasActuales.any {
-
-                    it.plantFirestoreId == planta.firestoreId &&
-                            !it.completed
-
+                if (planta.firestoreId.isBlank()) {
+                    return@forEach
                 }
 
-                if (!yaExiste) {
+                val necesitaRiego =
+                    planta.nextWateringTimestamp <= ahora
 
-                    val tarea = TaskEntity(
+                if (!necesitaRiego) {
+                    return@forEach
+                }
 
-                        plantFirestoreId = planta.firestoreId,
+                val yaExiste =
+                    tareasActuales.any { tarea ->
 
-                        plantName = planta.nombreComun,
-
-                        title = "Regar ${planta.nombreComun}",
-
-                        description =
-                            "Han pasado $diasTranscurridos días desde el último riego. Es momento de regar esta planta.",
-
-                        createdAt = hoy,
-
-                        completed = false
-
-                    )
-
-                    val resultado = taskRepository.saveTask(tarea)
-
-                    if (resultado.isFailure) {
-                        return Result.failure(resultado.exceptionOrNull()!!)
+                        tarea.plantFirestoreId ==
+                                planta.firestoreId &&
+                                !tarea.completed
                     }
 
+                if (yaExiste) {
+                    return@forEach
                 }
 
+                val diasTranscurridos =
+                    TimeUnit.MILLISECONDS.toDays(
+                        ahora - planta.ultimoRiego
+                    ).coerceAtLeast(0)
+
+                val textoDias =
+                    when (diasTranscurridos) {
+
+                        0L ->
+                            "La planta necesita ser regada"
+
+                        1L ->
+                            "Ha pasado 1 día desde el último riego"
+
+                        else ->
+                            "Han pasado $diasTranscurridos días desde el último riego"
+                    }
+
+                val tarea =
+                    TaskEntity(
+                        plantFirestoreId =
+                            planta.firestoreId,
+
+                        plantName =
+                            planta.nombreComun,
+
+                        title =
+                            "🌱 Regar ${planta.nombreComun}",
+
+                        description =
+                            textoDias,
+
+                        createdAt =
+                            ahora,
+
+                        completed =
+                            false
+                    )
+
+                taskRepository
+                    .saveTask(tarea)
+                    .getOrThrow()
             }
 
+            taskRepository.refreshTasks()
+
+            Result.success(Unit)
+
+        } catch (e: Exception) {
+
+            Result.failure(e)
         }
-
-        return Result.success(Unit)
-
     }
-
 }

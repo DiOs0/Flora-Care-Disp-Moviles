@@ -9,38 +9,70 @@
     app:cardCornerRadius="18dp"
     app:cardBackgroundColor="@color/pale_green">
 
+
     <LinearLayout
+
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+
         android:padding="16dp"
+
         android:orientation="horizontal">
 
+
+        <!-- Información de la tarea -->
         <LinearLayout
+
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+
             android:layout_weight="1"
+
             android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/txtTitulo"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textStyle="bold"
-                android:textSize="18sp"/>
 
             <TextView
-                android:id="@+id/txtDescripcion"
+
+                android:id="@+id/txtTitulo"
+
                 android:layout_width="wrap_content"
+
                 android:layout_height="wrap_content"
+
+                android:textStyle="bold"
+
+                android:textSize="18sp"/>
+
+
+
+            <TextView
+
+                android:id="@+id/txtDescripcion"
+
+                android:layout_width="wrap_content"
+
+                android:layout_height="wrap_content"
+
                 android:layout_marginTop="4dp"/>
+
 
         </LinearLayout>
 
-        <CheckBox
-            android:id="@+id/checkTask"
+
+
+        <!-- Nuevo botón -->
+        <Button
+
+            android:id="@+id/btnRegar"
+
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+
+            android:layout_height="wrap_content"
+
+            android:text="REGAR 🌱"/>
+
 
     </LinearLayout>
+
 
 </com.google.android.material.card.MaterialCardView>

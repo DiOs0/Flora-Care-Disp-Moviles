@@ -32,6 +32,7 @@ import com.uce.floracare.domain.usecase.RegistrarPlantaEnJardinUseCase
 import com.uce.floracare.domain.usecase.SubirImagenUseCase
 import com.uce.floracare.repositories.ImageRepositoryImpl
 import com.uce.floracare.repositories.PlantRepository
+import com.uce.floracare.repositories.TaskRepository
 import com.uce.floracare.repositories.connections.remote.firebase.AuthManager
 import com.uce.floracare.repositories.connections.remote.firebase.FirestoreManager
 import com.uce.floracare.repositories.connections.remote.firebase.StorageManager
@@ -54,19 +55,38 @@ class AddPlantFragment : Fragment() {
 
     private val viewModel: AddPlantViewModel by viewModels {
         ViewModelFactory {
+
             val authManager = AuthManager()
+
             val firestoreManager = FirestoreManager(authManager)
+
             val database = FloraCareDatabase.getDatabase(requireContext())
+
+            val taskRepository = TaskRepository(
+                firestoreManager,
+                authManager,
+                database.taskDao()
+            )
+
             val plantRepository = PlantRepository(
-                firestoreManager, 
+                firestoreManager,
                 StorageManager(requireContext()),
                 authManager,
-                database.plantDao()
+                database.plantDao(),
+                taskRepository
             )
-            val imageRepository = ImageRepositoryImpl()
+            val imageRepository =
+                ImageRepositoryImpl()
+
             AddPlantViewModel(
-                registrarPlantaEnJardinUseCase = RegistrarPlantaEnJardinUseCase(plantRepository),
-                subirImagenUseCase = SubirImagenUseCase(imageRepository)
+                registrarPlantaEnJardinUseCase =
+                    RegistrarPlantaEnJardinUseCase(
+                        plantRepository
+                    ),
+                subirImagenUseCase =
+                    SubirImagenUseCase(
+                        imageRepository
+                    )
             )
         }
     }

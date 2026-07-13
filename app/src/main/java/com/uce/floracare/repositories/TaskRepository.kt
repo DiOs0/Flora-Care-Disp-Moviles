@@ -17,57 +17,148 @@ class TaskRepository(
     private val authManager: AuthManager,
     private val taskDao: TaskDao
 ) {
-    private val repositoryScope = CoroutineScope(Dispatchers.IO)
 
-    /**
-     * SSOT: La UI observa este Flow reactivo desde Room.
-     */
-    fun getTasksStream(userId: String): Flow<List<TaskEntity>> {
-        // Disparamos la actualización en segundo plano
+    private val repositoryScope =
+        CoroutineScope(Dispatchers.IO)
+
+    fun getTasksStream(
+        userId: String
+    ): Flow<List<TaskEntity>> {
+
         repositoryScope.launch {
             refreshTasks()
         }
-        return taskDao.getTasksByUserId(userId).map { list ->
-            list.map { it.toDomain() }
-        }
+
+        return taskDao
+            .getTasksByUserId(userId)
+            .map { localTasks ->
+
+                localTasks.map {
+                    it.toDomain()
+                }
+            }
     }
 
-    /**
-     * Sincroniza las tareas desde Firebase a la base de datos local.
-     */
     suspend fun refreshTasks() {
-        val userId = authManager.getCurrentUserId() ?: return
-        val remoteResult = firestoreManager.getTasks()
-        remoteResult.onSuccess { remoteTasks ->
-            val localEntities = remoteTasks.map { it.toLocal(userId) }
-            taskDao.deleteTasksByUserId(userId)
-            taskDao.insertTasks(localEntities)
+
+        val userId =
+            authManager.getCurrentUserId()
+                ?: return
+
+        val result =
+            firestoreManager.getTasks()
+
+        result.onSuccess { remoteTasks ->
+
+            val validTasks =
+                remoteTasks.filter {
+                    it.firestoreId.isNotBlank()
+                }
+
+            val localTasks =
+                validTasks.map {
+                    it.toLocal(userId)
+                }
+
+            taskDao.deleteTasksByUserId(
+                userId
+            )
+
+            if (localTasks.isNotEmpty()) {
+
+                taskDao.insertTasks(
+                    localTasks
+                )
+            }
         }
     }
 
-    suspend fun getPendingTasks(): Result<List<TaskEntity>> {
+    suspend fun getPendingTasks():
+            Result<List<TaskEntity>> {
+
         return firestoreManager.getTasks()
     }
 
-    suspend fun saveTask(task: TaskEntity): Result<Unit> {
-        val result = firestoreManager.saveTask(task)
-        if (result.isSuccess) refreshTasks()
+    suspend fun saveTask(
+        task: TaskEntity
+    ): Result<Unit> {
+
+        val result =
+            firestoreManager.saveTask(task)
+
+        if (result.isSuccess) {
+            refreshTasks()
+        }
+
         return result
     }
 
-    suspend fun updateTask(task: TaskEntity): Result<Unit> {
-        val result = firestoreManager.updateTask(task)
-        if (result.isSuccess) refreshTasks()
+    suspend fun updateTask(
+        task: TaskEntity
+    ): Result<Unit> {
+
+        val result =
+            firestoreManager.updateTask(task)
+
+        if (result.isSuccess) {
+            refreshTasks()
+        }
+
         return result
     }
 
-    suspend fun deleteTask(taskId: String): Result<Unit> {
-        val result = firestoreManager.deleteTask(taskId)
-        if (result.isSuccess) refreshTasks()
+    suspend fun deleteTask(
+        taskId: String
+    ): Result<Unit> {
+
+        if (taskId.isBlank()) {
+
+            return Result.failure(
+                Exception(
+                    "El identificador de la tarea está vacío"
+                )
+            )
+        }
+
+        val result =
+            firestoreManager.deleteTask(
+                taskId
+            )
+
+        if (result.isSuccess) {
+            refreshTasks()
+        }
+
         return result
     }
 
-    suspend fun getTasks(): Result<List<TaskEntity>> {
-        return firestoreManager.getTasks()
+    suspend fun deleteTasksByPlantId(
+        plantFirestoreId: String
+    ): Result<Unit> {
+
+        return try {
+
+            val tasks =
+                getPendingTasks()
+                    .getOrThrow()
+
+            tasks
+                .filter {
+                    it.plantFirestoreId ==
+                            plantFirestoreId
+                }
+                .forEach {
+
+                    deleteTask(
+                        it.firestoreId
+                    ).getOrThrow()
+                }
+
+            Result.success(Unit)
+
+        } catch (e: Exception) {
+
+            Result.failure(e)
+        }
     }
 }

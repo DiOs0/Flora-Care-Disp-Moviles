@@ -40,9 +40,14 @@ data class PlantEntity(
     //Esto es para calcular lo del riego
     var ultimoRiego:Long = System.currentTimeMillis(),
 
+    val nextWateringTimestamp: Long =
+        System.currentTimeMillis() +
+                (7L * 24L * 60L * 60L * 1000L),
+
     var ultimaActualizacion:Long = System.currentTimeMillis(),
 
     var wateringFrequencyDays: Int = 7
+
 ) : Serializable
 
 data class Caracteristicas(

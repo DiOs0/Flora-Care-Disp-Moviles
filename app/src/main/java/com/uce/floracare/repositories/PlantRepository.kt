@@ -19,7 +19,8 @@ class PlantRepository(
     private val firestoreManager: FirestoreManager,
     private val storageManager: StorageManager,
     private val authManager: AuthManager,
-    private val plantDao: PlantDao
+    private val plantDao: PlantDao,
+    private val taskRepository: TaskRepository
 ) {
     private val repositoryScope = CoroutineScope(Dispatchers.IO)
 
@@ -105,17 +106,85 @@ class PlantRepository(
     }
 
     // Extension function para mapeo
-    private fun RemotePlantEntity.toLocalEntity(userId: String): LocalPlantEntity {
+    private fun RemotePlantEntity.toLocalEntity(
+        userId: String
+    ): LocalPlantEntity {
+
         return LocalPlantEntity(
-            id = this.firestoreId.ifEmpty { this.id.toString() },
-            nombreComun = this.nombreComun,
-            nombreCientifico = this.nombreCientifico,
-            imagen = this.imagen,
-            nivelCuidado = this.nivelCuidado,
-            esInterior = this.caracteristicas.indoor,
-            userId = userId,
-            wateringFrequencyDays = this.wateringFrequencyDays,
-            lastWateredDate = this.ultimoRiego
+
+            id =
+                this.firestoreId.ifEmpty {
+                    this.id.toString()
+                },
+
+            nombreComun =
+                this.nombreComun,
+
+            nombreCientifico =
+                this.nombreCientifico,
+
+            imagen =
+                this.imagen,
+
+            tipo =
+                this.tipo,
+
+            descripcion =
+                this.descripcion,
+
+            cicloVida =
+                this.cicloVida,
+
+            nivelCuidado =
+                this.nivelCuidado,
+
+            medicinal =
+                this.caracteristicas.medicinal,
+
+            esInterior =
+                this.caracteristicas.indoor,
+
+            tropical =
+                this.caracteristicas.tropical,
+
+            resistenteSequia =
+                this.caracteristicas.resistenteSequia,
+
+            toxicaHumanos =
+                this.caracteristicas.toxicaHumanos,
+
+            toxicaMascotas =
+                this.caracteristicas.toxicaMascotas,
+
+            frecuenciaRiego =
+                this.riego.frecuencia,
+
+            cadaValorRiego =
+                this.riego.cadaValor,
+
+            luzSolar =
+                this.luzSolar.joinToString("|"),
+
+            temperaturaMin =
+                this.temperatura.min,
+
+            temperaturaMax =
+                this.temperatura.max,
+
+            temperaturaDescripcion =
+                this.temperatura.descripcion,
+
+            userId =
+                userId,
+
+            wateringFrequencyDays =
+                this.wateringFrequencyDays,
+
+            lastWateredDate =
+                this.ultimoRiego,
+
+            nextWateringTimestamp =
+                this.nextWateringTimestamp
         )
     }
 
@@ -144,25 +213,63 @@ class PlantRepository(
     }
 
     suspend fun deletePlant(firestoreId: String): Result<Unit> {
-        return firestoreManager.deleteUserPlant(firestoreId)
-    }
 
-    suspend fun updateWatering(plantId: String, date: Long): Result<Unit> {
         return try {
-            // 1. Obtener planta actual de Room
-            val localPlant = plantDao.getPlantById(plantId) ?: return Result.failure(Exception("Planta no encontrada"))
 
-            // 2. Actualizar localmente (SSOT)
-            val updatedLocal = localPlant.copy(lastWateredDate = date)
-            plantDao.insertPlants(listOf(updatedLocal))
+            // 1. Eliminar tareas pendientes asociadas
+            taskRepository.deleteTasksByPlantId(firestoreId)
 
-            // 3. Sincronizar con Firestore en segundo plano
-            val remotePlant = updatedLocal.toRemoteEntity()
-            firestoreManager.updateUserPlant(remotePlant)
+
+            // 2. Eliminar planta de Firestore
+            firestoreManager.deleteUserPlant(firestoreId)
+
+
+            // 3. Eliminar planta local si existe
+            plantDao.deletePlantById(firestoreId)
+
 
             Result.success(Unit)
+
+
+        } catch(e: Exception){
+
+            Result.failure(e)
+
+        }
+    }
+
+    suspend fun updateWatering(
+        plantId: String,
+        lastWatered: Long,
+        nextWatering: Long
+    ): Result<Unit> {
+
+        return try {
+
+            // Obtener la planta desde Room
+            val localPlant = plantDao.getPlantById(plantId)
+                ?: return Result.failure(Exception("Planta no encontrada"))
+
+            // Actualizar datos
+            val updatedLocal = localPlant.copy(
+                lastWateredDate = lastWatered,
+                nextWateringTimestamp = nextWatering
+            )
+
+            // Guardar en Room
+            plantDao.insertPlants(listOf(updatedLocal))
+
+            // Sincronizar con Firestore
+            val remotePlant = updatedLocal.toRemoteEntity()
+
+            firestoreManager.updateUserPlant(remotePlant).getOrThrow()
+
+            Result.success(Unit)
+
         } catch (e: Exception) {
-            Log.e("PlantRepository", "Error en updateWatering", e)
+
+            Log.e("PlantRepository", "Error actualizando riego", e)
+
             Result.failure(e)
         }
     }

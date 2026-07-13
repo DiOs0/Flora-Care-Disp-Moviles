@@ -1,14 +1,33 @@
 package com.uce.floracare.domain.usecase
 
 import com.uce.floracare.repositories.PlantRepository
+import java.util.concurrent.TimeUnit
 
-/**
- * Caso de Uso para actualizar la fecha del último riego de una planta.
- * Actualiza el SSOT (Room) y sincroniza con el remoto (Firestore).
- */
-class ActualizarRiegoUseCase(private val repository: PlantRepository) {
-    suspend operator fun invoke(plantId: String): Result<Unit> {
-        val currentTime = System.currentTimeMillis()
-        return repository.updateWatering(plantId, currentTime)
+class ActualizarRiegoUseCase(
+
+    private val repository:
+    PlantRepository
+
+) {
+
+    suspend operator fun invoke(
+        plantId: String,
+        wateringFrequencyDays: Int
+    ): Result<Unit> {
+
+        val currentTime =
+            System.currentTimeMillis()
+
+        val nextWatering =
+            currentTime + TimeUnit.DAYS.toMillis(wateringFrequencyDays.toLong())
+        // Solo para pruebas:
+//        val nextWatering =
+//            currentTime + 10_000L
+
+        return repository.updateWatering(
+            plantId = plantId,
+            lastWatered = currentTime,
+            nextWatering = nextWatering
+        )
     }
 }

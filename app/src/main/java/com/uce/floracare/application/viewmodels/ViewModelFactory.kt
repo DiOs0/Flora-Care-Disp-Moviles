@@ -2,6 +2,7 @@ package com.uce.floracare.application.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.uce.floracare.data.scheduler.AndroidWateringScheduler
 
 /**
  * Generic ViewModelFactory to inject repositories and use cases manually into ViewModels.
@@ -11,4 +12,5 @@ class ViewModelFactory<T : ViewModel>(private val creator: () -> T) : ViewModelP
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return creator() as T
     }
+
 }

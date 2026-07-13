@@ -31,4 +31,11 @@ interface PlantDao {
 
     @Delete
     suspend fun deletePlant(plant: PlantEntity)
+
+    @Query(
+        "DELETE FROM plants WHERE id = :plantId"
+    )
+    suspend fun deletePlantById(
+        plantId: String
+    )
 }

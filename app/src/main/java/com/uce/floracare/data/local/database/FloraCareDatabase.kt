@@ -9,7 +9,7 @@ import com.uce.floracare.data.local.dao.TaskDao
 import com.uce.floracare.data.local.entity.PlantEntity
 import com.uce.floracare.data.local.entity.TaskEntity
 
-@Database(entities = [PlantEntity::class, TaskEntity::class], version = 3, exportSchema = false)
+@Database(entities = [PlantEntity::class, TaskEntity::class], version = 6, exportSchema = false)
 abstract class FloraCareDatabase : RoomDatabase() {
 
     abstract fun plantDao(): PlantDao

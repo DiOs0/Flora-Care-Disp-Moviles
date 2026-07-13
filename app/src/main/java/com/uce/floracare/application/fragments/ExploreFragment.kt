@@ -25,6 +25,7 @@ import com.uce.floracare.databinding.FragmentExploreBinding
 import com.uce.floracare.domain.usecase.ObtenerCatalogoPlantasUseCase
 import com.uce.floracare.domain.usecase.SincronizarCatalogoUseCase
 import com.uce.floracare.repositories.PlantRepository
+import com.uce.floracare.repositories.TaskRepository
 import com.uce.floracare.repositories.connections.remote.firebase.AuthManager
 import com.uce.floracare.repositories.connections.remote.firebase.FirestoreManager
 import com.uce.floracare.repositories.connections.remote.firebase.StorageManager
@@ -39,12 +40,24 @@ class ExploreFragment : Fragment() {
             val authManager = AuthManager()
             val firestoreManager = FirestoreManager(authManager)
             val database = FloraCareDatabase.getDatabase(requireContext())
-            val plantRepository = PlantRepository(
-                firestoreManager,
-                StorageManager(requireContext()),
-                authManager,
-                database.plantDao()
-            )
+
+
+            val taskRepository =
+                TaskRepository(
+                    firestoreManager,
+                    authManager,
+                    database.taskDao()
+                )
+
+
+            val plantRepository =
+                PlantRepository(
+                    firestoreManager,
+                    StorageManager(requireContext()),
+                    authManager,
+                    database.plantDao(),
+                    taskRepository
+                )
             ExploreViewModel(
                 obtenerCatalogoPlantasUseCase = ObtenerCatalogoPlantasUseCase(plantRepository),
                 sincronizarCatalogoUseCase = SincronizarCatalogoUseCase(plantRepository)
@@ -100,18 +113,20 @@ class ExploreFragment : Fragment() {
     }
 
     private fun navigateToDetail(plant: PlantEntity) {
-        val addPlantFragment = AddPlantFragment.newInstance(
-            name = plant.nombreComun,
-            species = plant.nombreCientifico,
-            isIndoor = plant.caracteristicas.indoor,
-            imageUrl = plant.imagen,
-            plantEntity = plant
-        )
 
-        (activity as? MainActivity)?.apply {
-            setSelectedMenuItem(R.id.nav_add)
-            loadFragment(addPlantFragment)
-        }
+        val addPlantFragment =
+            AddPlantFragment.newInstance(
+                name = plant.nombreComun,
+                species = plant.nombreCientifico,
+                isIndoor = plant.caracteristicas.indoor,
+                imageUrl = plant.imagen,
+                plantEntity = plant
+            )
+
+
+        (activity as? MainActivity)
+            ?.loadFragment(addPlantFragment)
+
     }
 
     private fun setupChips() {

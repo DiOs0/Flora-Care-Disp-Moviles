@@ -12,7 +12,20 @@
           "package_name": "com.uce.floracare"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "366477533697-8gsn04lhjk2cet0umgbg1trkbrqqsk6l.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.uce.floracare",
+            "certificate_hash": "2268f9af0fa4104488c8139e04bae510a6c5b899"
+          }
+        },
+        {
+          "client_id": "366477533697-111ci1rclgtg2a9lfrimoc21so02f735.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBg83FQ5Y7Uix8df5heMJvxk9Y0zgb1SEI"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "366477533697-111ci1rclgtg2a9lfrimoc21so02f735.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

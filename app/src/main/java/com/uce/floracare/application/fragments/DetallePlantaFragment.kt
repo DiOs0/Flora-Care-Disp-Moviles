@@ -24,6 +24,7 @@ import com.uce.floracare.databinding.FragmentDetallePlantaBinding
 import com.uce.floracare.domain.usecase.ActualizarPlantaUsuarioUseCase
 import com.uce.floracare.domain.usecase.EliminarPlantaUsuarioUseCase
 import com.uce.floracare.repositories.PlantRepository
+import com.uce.floracare.repositories.TaskRepository
 import com.uce.floracare.repositories.connections.remote.firebase.AuthManager
 import com.uce.floracare.repositories.connections.remote.firebase.FirestoreManager
 import com.uce.floracare.repositories.connections.remote.firebase.StorageManager
@@ -41,12 +42,21 @@ class DetallePlantaFragment : Fragment() {
             val authManager = AuthManager()
             val firestoreManager = FirestoreManager(authManager)
             val database = FloraCareDatabase.getDatabase(requireContext())
+
+            val taskRepository = TaskRepository(
+                firestoreManager,
+                authManager,
+                database.taskDao()
+            )
+
             val plantRepository = PlantRepository(
                 firestoreManager,
                 StorageManager(requireContext()),
                 authManager,
-                database.plantDao()
+                database.plantDao(),
+                taskRepository
             )
+
             PlantDetailViewModel(
                 eliminarPlantaUsuarioUseCase = EliminarPlantaUsuarioUseCase(plantRepository),
                 actualizarPlantaUsuarioUseCase = ActualizarPlantaUsuarioUseCase(plantRepository)
