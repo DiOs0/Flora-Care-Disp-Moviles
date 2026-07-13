@@ -16,6 +16,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.uce.floracare.R
 import com.uce.floracare.application.activities.MainActivity
 import com.uce.floracare.application.adapters.PlantAdapter
+import com.uce.floracare.application.adapters.PlantViewMode
 import com.uce.floracare.application.adapters.reyes_milan_osorio.TaskAdapter
 import com.uce.floracare.application.viewmodels.MiJardinUiState
 import com.uce.floracare.application.viewmodels.MiJardinViewModel
@@ -178,6 +179,7 @@ class MiJardinFragment : Fragment() {
         )
 
         setupRecyclerViews()
+        setupToggleButton()
         setupObservers()
 
         if (
@@ -275,6 +277,28 @@ class MiJardinFragment : Fragment() {
         }
     }
 
+    private fun setupToggleButton() {
+        binding.btnToggleView.setOnClickListener {
+            toggleViewMode()
+        }
+    }
+
+    private fun toggleViewMode() {
+        val isGrid = plantAdapter.viewMode == PlantViewMode.GRID
+        plantAdapter.viewMode = if (isGrid) PlantViewMode.LIST else PlantViewMode.GRID
+
+        binding.rvPlants.layoutManager = if (isGrid) {
+            LinearLayoutManager(requireContext())
+        } else {
+            GridLayoutManager(requireContext(), 2)
+        }
+
+        binding.btnToggleView.setIconResource(
+            if (isGrid) android.R.drawable.ic_menu_sort_by_size
+            else android.R.drawable.ic_menu_view
+        )
+    }
+
     private fun setupObservers() {
 
         viewLifecycleOwner
@@ -300,6 +324,14 @@ class MiJardinFragment : Fragment() {
                                         plantAdapter.submitList(
                                             state.plants
                                         )
+
+                                        if (state.plants.isEmpty()) {
+                                            binding.rvPlants.visibility = View.GONE
+                                            binding.layoutEmptyPlants.visibility = View.VISIBLE
+                                        } else {
+                                            binding.rvPlants.visibility = View.VISIBLE
+                                            binding.layoutEmptyPlants.visibility = View.GONE
+                                        }
 
                                         taskAdapter.submitList(
                                             state.tasks

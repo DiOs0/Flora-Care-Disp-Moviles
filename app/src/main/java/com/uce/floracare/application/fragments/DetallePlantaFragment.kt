@@ -5,6 +5,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -100,15 +103,51 @@ class DetallePlantaFragment : Fragment() {
         binding.txtNivelCuidado.text = "Cuidado: ${plant.nivelCuidado}"
         binding.txtTemperatura.text = "Temperatura: ${plant.temperatura.descripcion} ${plant.temperatura.min}°-${plant.temperatura.max}°"
 
-        val caracteristicas = mutableListOf<String>()
-        if (plant.caracteristicas.indoor) caracteristicas.add("Interior")
-        if (plant.caracteristicas.tropical) caracteristicas.add("Tropical")
-        if (plant.caracteristicas.medicinal) caracteristicas.add("Medicinal")
-        if (plant.caracteristicas.resistenteSequia) caracteristicas.add("Resistente sequía")
-        if (plant.caracteristicas.toxicaHumanos) caracteristicas.add("Tóxica humanos")
-        if (plant.caracteristicas.toxicaMascotas) caracteristicas.add("Tóxica mascotas")
+        cargarCaracteristicas()
+    }
 
-        binding.txtCaracteristicas.text = if (caracteristicas.isEmpty()) "Ninguna" else caracteristicas.joinToString(", ")
+    private fun cargarCaracteristicas() {
+        val chips = mutableListOf<Pair<String, Int>>()
+
+        chips.add(if (plant.caracteristicas.indoor) "Interior" to R.drawable.interior else "Exterior" to R.drawable.exterior)
+        if (plant.caracteristicas.tropical) chips.add("Tropical" to R.drawable.tropical)
+        if (plant.caracteristicas.medicinal) chips.add("Medicinal" to R.drawable.medicine_plant)
+        if (plant.caracteristicas.resistenteSequia) chips.add("Resistente sequía" to R.drawable.sequia)
+        if (plant.caracteristicas.toxicaHumanos) chips.add("Tóxico humanos" to R.drawable.humans_bad)
+        if (plant.caracteristicas.toxicaMascotas) chips.add("Tóxico mascotas" to R.drawable.no_dog)
+
+        val container = binding.layoutCaracteristicasItems
+        container.removeAllViews()
+
+        if (chips.isEmpty()) {
+            val tv = TextView(requireContext()).apply {
+                text = "Ninguna"
+                setTextColor(resources.getColor(R.color.gris_natural, null))
+                textSize = 16f
+            }
+            container.addView(tv)
+            return
+        }
+
+        val chipsPorFila = 2
+        chips.chunked(chipsPorFila).forEach { fila ->
+            val row = LinearLayout(requireContext()).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+                orientation = LinearLayout.HORIZONTAL
+            }
+
+            fila.forEach { (label, iconRes) ->
+                val chip = layoutInflater.inflate(R.layout.item_char_chip, row, false)
+                chip.findViewById<ImageView>(R.id.imgCharIcon).setImageResource(iconRes)
+                chip.findViewById<TextView>(R.id.txtCharLabel).text = label
+                row.addView(chip)
+            }
+
+            container.addView(row)
+        }
     }
 
     private fun configurarEventos() {

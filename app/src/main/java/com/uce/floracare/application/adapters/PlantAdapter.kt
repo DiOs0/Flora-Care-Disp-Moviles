@@ -4,6 +4,7 @@ import android.graphics.drawable.GradientDrawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.content.ContextCompat
@@ -14,35 +15,32 @@ import com.bumptech.glide.Glide
 import com.uce.floracare.R
 import com.uce.floracare.data.remote.dto.PlantEntity
 import com.uce.floracare.data.remote.dto.calcularEstadoRiego
-import com.uce.floracare.domain.model.WateringStatus
 import com.uce.floracare.databinding.ItemPlantCardBinding
+import com.uce.floracare.domain.model.WateringStatus
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
+enum class PlantViewMode {
+    GRID, LIST
+}
+
 class PlantAdapter(
     private val onPlantClick: (PlantEntity) -> Unit,
     private val onEditWatering: ((PlantEntity) -> Unit)? = null,
     private val layoutRes: Int? = null
-) : ListAdapter<PlantEntity, PlantAdapter.PlantViewHolder>(DiffCallback) {
+) : ListAdapter<PlantEntity, RecyclerView.ViewHolder>(DiffCallback) {
+
+    var viewMode: PlantViewMode = PlantViewMode.GRID
+        set(value) {
+            if (field != value) {
+                field = value
+                notifyDataSetChanged()
+            }
+        }
 
     private var fullList: List<PlantEntity> = emptyList()
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PlantViewHolder {
-        val layoutInflater = LayoutInflater.from(parent.context)
-        return if (layoutRes != null) {
-            val view = layoutInflater.inflate(layoutRes, parent, false)
-            PlantViewHolder(view)
-        } else {
-            val binding = ItemPlantCardBinding.inflate(layoutInflater, parent, false)
-            PlantViewHolder(binding.root, binding)
-        }
-    }
-
-    override fun onBindViewHolder(holder: PlantViewHolder, position: Int) {
-        holder.bind(getItem(position))
-    }
 
     fun submitFullList(list: List<PlantEntity>) {
         fullList = list
@@ -62,7 +60,40 @@ class PlantAdapter(
         return filtered.isNotEmpty()
     }
 
-    inner class PlantViewHolder(view: View, private val binding: ItemPlantCardBinding? = null) : RecyclerView.ViewHolder(view) {
+    override fun getItemViewType(position: Int): Int {
+        if (layoutRes != null) return 0
+        return viewMode.ordinal
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        val inflater = LayoutInflater.from(parent.context)
+
+        if (layoutRes != null) {
+            val view = inflater.inflate(layoutRes, parent, false)
+            return LegacyViewHolder(view)
+        }
+
+        return when (viewType) {
+            PlantViewMode.LIST.ordinal -> {
+                val view = inflater.inflate(R.layout.item_plant_card_horizontal, parent, false)
+                ListViewHolder(view)
+            }
+            else -> {
+                val binding = ItemPlantCardBinding.inflate(inflater, parent, false)
+                GridViewHolder(binding)
+            }
+        }
+    }
+
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        when (holder) {
+            is GridViewHolder -> holder.bind(getItem(position))
+            is ListViewHolder -> holder.bind(getItem(position))
+            is LegacyViewHolder -> holder.bind(getItem(position))
+        }
+    }
+
+    inner class LegacyViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         private val ivImage: ImageView? = view.findViewById(R.id.ivPlantImage) ?: view.findViewById(R.id.imgPlantPhoto)
         private val tvName: TextView? = view.findViewById(R.id.tvPlantName) ?: view.findViewById(R.id.txtPlantName)
         private val tvScientific: TextView? = view.findViewById(R.id.tvPlantScientific) ?: view.findViewById(R.id.txtPlantSpecies)
@@ -73,8 +104,8 @@ class PlantAdapter(
             ivImage?.let {
                 Glide.with(it.context)
                     .load(plant.imagen)
-                    .placeholder(R.drawable.ic_launcher_foreground)
-                    .error(R.drawable.ic_launcher_foreground)
+                    .placeholder(R.drawable.ic_logo)
+                    .error(R.drawable.ic_logo)
                     .centerCrop()
                     .into(it)
             }
@@ -89,98 +120,196 @@ class PlantAdapter(
 
             tvCareLevel?.let { setCareLevel(it, plant.nivelCuidado) }
 
-            // Lógica de Información de Riego (Último y Próximo)
-            binding?.let { b ->
-                val dateFormat = SimpleDateFormat("dd/MM", Locale.getDefault())
-                val lastDate = dateFormat.format(Date(plant.ultimoRiego))
-                val nextDateMillis = plant.ultimoRiego + TimeUnit.DAYS.toMillis(plant.wateringFrequencyDays.toLong())
-                val nextDate = dateFormat.format(Date(nextDateMillis))
+            itemView.setOnClickListener { onPlantClick(plant) }
+        }
+    }
 
-                b.txtLastWatered.text = "Último riego: $lastDate"
-                b.txtNextWatering.text = "Próximo riego: $nextDate"
+    inner class GridViewHolder(private val binding: ItemPlantCardBinding) :
+        RecyclerView.ViewHolder(binding.root) {
+
+        fun bind(plant: PlantEntity) {
+            Glide.with(binding.imgPlantPhoto.context)
+                .load(plant.imagen)
+                .placeholder(R.drawable.ic_logo)
+                .error(R.drawable.ic_logo)
+                .centerCrop()
+                .into(binding.imgPlantPhoto)
+
+            binding.txtPlantName.text = plant.nombreComun
+            binding.txtPlantSpecies.text = plant.nombreCientifico
+
+            val dateFormat = SimpleDateFormat("dd/MM", Locale.getDefault())
+            val lastDate = dateFormat.format(Date(plant.ultimoRiego))
+            val nextDateMillis = plant.ultimoRiego + TimeUnit.DAYS.toMillis(plant.wateringFrequencyDays.toLong())
+            val nextDate = dateFormat.format(Date(nextDateMillis))
+
+            binding.txtLastWatered.text = "Último riego: $lastDate"
+            binding.txtNextWatering.text = "Próximo riego: $nextDate"
+
+            val status = plant.calcularEstadoRiego()
+            updateWateringBadge(binding.badgeBackground, binding.badgeIcon, binding.badgeLayout, status)
+
+            if (status == WateringStatus.URGENTE) {
+                binding.root.setCardBackgroundColor(ContextCompat.getColor(itemView.context, R.color.alert_red_soft))
+                binding.root.strokeColor = ContextCompat.getColor(itemView.context, R.color.alert_red)
+                binding.txtHumidity.visibility = View.VISIBLE
+                binding.txtHumidity.text = "Humedad: 20%"
+            } else {
+                binding.root.setCardBackgroundColor(ContextCompat.getColor(itemView.context, R.color.white))
+                binding.root.strokeColor = ContextCompat.getColor(itemView.context, R.color.gris_linea)
+                binding.txtHumidity.visibility = View.GONE
             }
 
-            // Lógica de Badge de Riego
-            binding?.let { b ->
-                val status = plant.calcularEstadoRiego()
-                updateWateringBadge(b, status)
+            binding.root.setOnLongClickListener {
+                binding.overlayConfirmWatering.visibility = View.VISIBLE
+                true
+            }
 
-                // CASO B: Visualización de Alerta
-                if (status == WateringStatus.URGENTE) {
-                    b.root.setCardBackgroundColor(ContextCompat.getColor(itemView.context, R.color.alert_red_soft))
-                    b.root.strokeColor = ContextCompat.getColor(itemView.context, R.color.alert_red)
-                    b.txtHumidity.visibility = View.VISIBLE
-                    // Simulación de métrica falsa
-                    b.txtHumidity.text = "Humedad: 20%"
-                } else {
-                    b.root.setCardBackgroundColor(ContextCompat.getColor(itemView.context, R.color.white))
-                    b.root.strokeColor = ContextCompat.getColor(itemView.context, R.color.gris_linea)
-                    b.txtHumidity.visibility = View.GONE
-                }
+            binding.chkConfirmWatering.setOnCheckedChangeListener { _, isChecked ->
+                if (isChecked) {
+                    binding.overlayConfirmWatering.visibility = View.GONE
+                    binding.root.setCardBackgroundColor(ContextCompat.getColor(itemView.context, R.color.success_green_soft))
+                    binding.root.strokeColor = ContextCompat.getColor(itemView.context, R.color.care_low)
+                    binding.txtWatered.visibility = View.VISIBLE
+                    binding.txtHumidity.visibility = View.GONE
 
-                // CASO C: Confirmación de Riego (Simulación al hacer clic largo o hover ficticio)
-                b.root.setOnLongClickListener {
-                    b.overlayConfirmWatering.visibility = View.VISIBLE
-                    true
+                    binding.badgeBackground.background = ContextCompat.getDrawable(itemView.context, R.drawable.circle_success_green)
+                    binding.badgeIcon.setImageResource(android.R.drawable.ic_menu_compass)
+                    binding.badgeIcon.setColorFilter(ContextCompat.getColor(itemView.context, R.color.white))
                 }
+            }
 
-                b.chkConfirmWatering.setOnCheckedChangeListener { _, isChecked ->
-                    if (isChecked) {
-                        b.overlayConfirmWatering.visibility = View.GONE
-                        b.root.setCardBackgroundColor(ContextCompat.getColor(itemView.context, R.color.success_green_soft))
-                        b.root.strokeColor = ContextCompat.getColor(itemView.context, R.color.care_low)
-                        b.txtWatered.visibility = View.VISIBLE
-                        b.txtHumidity.visibility = View.GONE
-                        
-                        // Cambiar icono de badge a check
-                        b.badgeBackground.background = ContextCompat.getDrawable(itemView.context, R.drawable.circle_success_green)
-                        b.badgeIcon.setImageResource(android.R.drawable.ic_menu_compass) // Idealmente un check
-                        b.badgeIcon.setColorFilter(ContextCompat.getColor(itemView.context, R.color.white))
-                    }
-                }
-
-                b.btnEditWatering.setOnClickListener {
-                    onEditWatering?.invoke(plant)
-                }
+            binding.btnEditWatering.setOnClickListener {
+                onEditWatering?.invoke(plant)
             }
 
             itemView.setOnClickListener { onPlantClick(plant) }
         }
+    }
 
-        private fun updateWateringBadge(b: ItemPlantCardBinding, status: WateringStatus) {
-            val ctx = b.root.context
-            val (bgColor, iconRes, iconTint) = when (status) {
-                WateringStatus.URGENTE -> Triple(
-                    R.color.care_high_bg, 
-                    android.R.drawable.ic_dialog_alert, 
-                    R.color.alert_red
-                )
-                WateringStatus.ATENCION_REQUERIDA -> Triple(
-                    R.color.care_medium_bg, 
-                    android.R.drawable.ic_popup_reminder, 
-                    R.color.care_medium
-                )
-                WateringStatus.NORMAL -> Triple(
-                    R.color.care_low_bg, 
-                    android.R.drawable.ic_menu_compass, // Temporalmente, idealmente una gota
-                    R.color.care_low
-                )
+    inner class ListViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val imgPlantPhoto: ImageView = itemView.findViewById(R.id.imgPlantPhoto)
+        private val txtPlantName: TextView = itemView.findViewById(R.id.txtPlantName)
+        private val txtPlantSpecies: TextView = itemView.findViewById(R.id.txtPlantSpecies)
+        private val txtLastWatered: TextView = itemView.findViewById(R.id.txtLastWatered)
+        private val txtNextWatering: TextView = itemView.findViewById(R.id.txtNextWatering)
+        private val txtWateringFrequency: TextView = itemView.findViewById(R.id.txtWateringFrequency)
+        private val txtHumidity: TextView = itemView.findViewById(R.id.txtHumidity)
+        private val txtWatered: TextView = itemView.findViewById(R.id.txtWatered)
+        private val tvPlantCareLevel: TextView = itemView.findViewById(R.id.tvPlantCareLevel)
+        private val tvPlantTag: TextView = itemView.findViewById(R.id.tvPlantTag)
+        private val overlayConfirmWatering: FrameLayout = itemView.findViewById(R.id.overlayConfirmWatering)
+        private val chkConfirmWatering = itemView.findViewById<com.google.android.material.checkbox.MaterialCheckBox>(R.id.chkConfirmWatering)
+        private val badgeLayout: FrameLayout = itemView.findViewById(R.id.badgeLayout)
+        private val badgeBackground: View = itemView.findViewById(R.id.badgeBackground)
+        private val badgeIcon: ImageView = itemView.findViewById(R.id.badgeIcon)
+        private val btnEditWatering: ImageView = itemView.findViewById(R.id.btnEditWatering)
+
+        fun bind(plant: PlantEntity) {
+            Glide.with(imgPlantPhoto.context)
+                .load(plant.imagen)
+                .placeholder(R.drawable.ic_logo)
+                .error(R.drawable.ic_logo)
+                .centerCrop()
+                .into(imgPlantPhoto)
+
+            txtPlantName.text = plant.nombreComun
+            txtPlantSpecies.text = plant.nombreCientifico
+
+            setCareLevel(tvPlantCareLevel, plant.nivelCuidado)
+
+            tvPlantTag.apply {
+                text = if (plant.caracteristicas.indoor) "Interior" else "Exterior"
+                visibility = View.VISIBLE
             }
 
-            // Fondo con bordes redondeados y color suave
-            val drawable = GradientDrawable().apply {
-                shape = GradientDrawable.OVAL
-                setColor(ContextCompat.getColor(ctx, bgColor))
-                setStroke(2, ContextCompat.getColor(ctx, iconTint))
-            }
-            b.badgeBackground.background = drawable
+            val dateFormat = SimpleDateFormat("dd/MM", Locale.getDefault())
+            val lastDate = dateFormat.format(Date(plant.ultimoRiego))
+            val nextDateMillis = plant.ultimoRiego + TimeUnit.DAYS.toMillis(plant.wateringFrequencyDays.toLong())
+            val nextDate = dateFormat.format(Date(nextDateMillis))
 
-            // Icono con color vibrante
-            b.badgeIcon.setImageResource(iconRes)
-            b.badgeIcon.setColorFilter(ContextCompat.getColor(ctx, iconTint))
-            
-            b.badgeLayout.visibility = View.VISIBLE
+            txtLastWatered.text = "Último riego: $lastDate"
+            txtNextWatering.text = "Próximo riego: $nextDate"
+            txtWateringFrequency.text = "Cada ${plant.wateringFrequencyDays} días"
+
+            val cardRoot = itemView as com.google.android.material.card.MaterialCardView
+            val status = plant.calcularEstadoRiego()
+            updateWateringBadge(badgeBackground, badgeIcon, badgeLayout, status)
+
+            if (status == WateringStatus.URGENTE) {
+                cardRoot.setCardBackgroundColor(ContextCompat.getColor(itemView.context, R.color.alert_red_soft))
+                cardRoot.strokeColor = ContextCompat.getColor(itemView.context, R.color.alert_red)
+                txtHumidity.visibility = View.VISIBLE
+                txtHumidity.text = "Humedad: 20%"
+            } else {
+                cardRoot.setCardBackgroundColor(ContextCompat.getColor(itemView.context, R.color.white))
+                cardRoot.strokeColor = ContextCompat.getColor(itemView.context, R.color.gris_linea)
+                txtHumidity.visibility = View.GONE
+            }
+
+            itemView.setOnLongClickListener {
+                overlayConfirmWatering.visibility = View.VISIBLE
+                true
+            }
+
+            chkConfirmWatering.setOnCheckedChangeListener { _, isChecked ->
+                if (isChecked) {
+                    overlayConfirmWatering.visibility = View.GONE
+                    cardRoot.setCardBackgroundColor(ContextCompat.getColor(itemView.context, R.color.success_green_soft))
+                    cardRoot.strokeColor = ContextCompat.getColor(itemView.context, R.color.care_low)
+                    txtWatered.visibility = View.VISIBLE
+                    txtHumidity.visibility = View.GONE
+
+                    badgeBackground.background = ContextCompat.getDrawable(itemView.context, R.drawable.circle_success_green)
+                    badgeIcon.setImageResource(android.R.drawable.ic_menu_compass)
+                    badgeIcon.setColorFilter(ContextCompat.getColor(itemView.context, R.color.white))
+                }
+            }
+
+            btnEditWatering.setOnClickListener {
+                onEditWatering?.invoke(plant)
+            }
+
+            itemView.setOnClickListener { onPlantClick(plant) }
         }
+    }
+
+    private fun updateWateringBadge(
+        badgeBackground: View,
+        badgeIcon: ImageView,
+        badgeLayout: FrameLayout,
+        status: WateringStatus
+    ) {
+        val ctx = badgeBackground.context
+        val (bgColor, iconRes, iconTint) = when (status) {
+            WateringStatus.URGENTE -> Triple(
+                R.color.care_high_bg,
+                android.R.drawable.ic_dialog_alert,
+                R.color.alert_red
+            )
+            WateringStatus.ATENCION_REQUERIDA -> Triple(
+                R.color.care_medium_bg,
+                android.R.drawable.ic_popup_reminder,
+                R.color.care_medium
+            )
+            WateringStatus.NORMAL -> Triple(
+                R.color.care_low_bg,
+                android.R.drawable.ic_menu_compass,
+                R.color.care_low
+            )
+        }
+
+        val drawable = GradientDrawable().apply {
+            shape = GradientDrawable.OVAL
+            setColor(ContextCompat.getColor(ctx, bgColor))
+            setStroke(2, ContextCompat.getColor(ctx, iconTint))
+        }
+        badgeBackground.background = drawable
+
+        badgeIcon.setImageResource(iconRes)
+        badgeIcon.setColorFilter(ContextCompat.getColor(ctx, iconTint))
+
+        badgeLayout.visibility = View.VISIBLE
     }
 
     private fun setCareLevel(textView: TextView, level: String) {

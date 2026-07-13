@@ -78,7 +78,10 @@
             android:layout_width="46dp"
             android:layout_height="46dp"
             android:scaleType="centerCrop"
-            android:src="@mipmap/ic_launcher_round"
+            android:src="@drawable/baseline_person_24"
+            app:tint="@color/forest_green"
+            android:background="@color/accent_green"
+            android:padding="10dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
@@ -181,12 +184,15 @@
                     android:textSize="22sp"
                     android:textStyle="bold" />
 
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnToggleView"
+                    style="@style/Widget.Material3.Button.IconButton"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
                     android:layout_alignParentEnd="true"
-                    android:src="@android:drawable/ic_dialog_dialer"
-                    app:tint="@color/forest_green" />
+                    android:layout_centerVertical="true"
+                    app:icon="@android:drawable/ic_menu_view"
+                    app:iconTint="@color/forest_green" />
 
             </RelativeLayout>
 
@@ -199,6 +205,47 @@
                 tools:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
                 tools:listitem="@layout/item_plant_card"
                 tools:spanCount="2" />
+
+            <LinearLayout
+                android:id="@+id/layoutEmptyPlants"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="40dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:id="@+id/imgEmptyPlants"
+                    android:layout_width="180dp"
+                    android:layout_height="180dp"
+                    android:alpha="0.4"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/planta_noplanta" />
+
+                <TextView
+                    android:id="@+id/tvEmptyPlants"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:text="No hay plantas"
+                    android:textColor="@color/text_gray"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvEmptyQuote"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center"
+                    android:paddingHorizontal="20dp"
+                    android:text="&quot;Las plantas tienen un tipo de alma, el alma vegetativa, cuya funci\u00f3n es la nutrici\u00f3n, el crecimiento y la reproducci\u00f3n. Es el nivel m\u00e1s b\u00e1sico de la vida, pero es el fundamento sobre el cual se construye todo lo dem\u00e1s.&quot;\n\u2014 Arist\u00f3teles, Acerca del alma"
+                    android:textColor="@color/forest_green"
+                    android:textSize="14sp"
+                    android:textStyle="italic" />
+
+            </LinearLayout>
 
         </LinearLayout>
 

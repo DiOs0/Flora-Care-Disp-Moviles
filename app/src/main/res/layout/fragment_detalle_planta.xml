@@ -169,13 +169,12 @@
             app:cardCornerRadius="20dp"
             app:cardElevation="2dp">
 
-            <TextView
-                android:id="@+id/txtCaracteristicas"
+            <LinearLayout
+                android:id="@+id/layoutCaracteristicasItems"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="18dp"
-                android:textColor="@color/text_dark"
-                android:textSize="16sp" />
+                android:orientation="vertical"
+                android:padding="12dp" />
 
         </com.google.android.material.card.MaterialCardView>
 
