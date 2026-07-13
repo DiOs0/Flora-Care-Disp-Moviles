@@ -1,6 +1,7 @@
 package com.uce.floracare.application.fragments
 
 import android.app.Dialog
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -9,6 +10,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -96,14 +98,238 @@ class DetallePlantaFragment : Fragment() {
 
         binding.txtTipo.text = "Tipo: ${plant.tipo.ifEmpty { "No disponible" }}"
         binding.txtDescripcion.text = plant.descripcion.ifEmpty { "Sin descripción" }
-        binding.txtRiego.text = "Frecuencia: ${plant.riego.frecuencia}"
-        binding.txtCadaRiego.text = "Cada: ${plant.riego.cadaValor} días"
-        binding.txtLuz.text = "Luz: ${plant.luzSolar.joinToString(", ")}"
-        binding.txtCicloVida.text = "Ciclo: ${plant.cicloVida}"
-        binding.txtNivelCuidado.text = "Cuidado: ${plant.nivelCuidado}"
-        binding.txtTemperatura.text = "Temperatura: ${plant.temperatura.descripcion} ${plant.temperatura.min}°-${plant.temperatura.max}°"
 
+        cargarCuidados()
         cargarCaracteristicas()
+    }
+
+    private fun cargarCuidados() {
+        val container = binding.layoutCuidadosItems
+        container.removeAllViews()
+
+        val row1 = LinearLayout(requireContext()).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            orientation = LinearLayout.HORIZONTAL
+        }
+
+        val row2 = LinearLayout(requireContext()).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            orientation = LinearLayout.HORIZONTAL
+        }
+
+        val diasRestantes = calcularDiasRestantes()
+        val textRiego = when {
+            diasRestantes < 0L -> "¡Hoy!"
+            diasRestantes == 0L -> "¡Hoy!"
+            diasRestantes == 1L -> "1 día"
+            else -> "$diasRestantes días"
+        }
+
+        row1.addView(crearIndicator(
+            icono = R.drawable.rain,
+            titulo = "RIEGO",
+            valor = textRiego,
+            sub = "Cada ${plant.wateringFrequencyDays} días",
+            parentRow = row1
+        ))
+
+        val luzValue = plant.luzSolar.firstOrNull() ?: ""
+        val sunsLayout = crearSoles(luzValue)
+        row1.addView(crearIndicator(
+            icono = R.drawable.sun,
+            titulo = "LUZ",
+            sunsLayout = sunsLayout,
+            sub = luzValue,
+            parentRow = row1
+        ))
+
+        val tempText = "${plant.temperatura.min}° - ${plant.temperatura.max}°"
+        val tempBg = colorParaTemperatura(plant.temperatura.min, plant.temperatura.max)
+        row2.addView(crearIndicator(
+            icono = R.drawable.termometro,
+            titulo = "TEMPERATURA",
+            valor = tempText,
+            sub = plant.temperatura.descripcion,
+            backgroundColor = tempBg,
+            parentRow = row2
+        ))
+
+        row2.addView(crearIndicator(
+            icono = R.drawable.calendar,
+            titulo = "CICLO",
+            valor = plant.cicloVida.ifEmpty { "—" },
+            sub = plant.tipo.ifEmpty { "" },
+            parentRow = row2
+        ))
+
+        container.addView(row1)
+        container.addView(row2)
+        container.addView(crearBarraCuidado())
+    }
+
+    private fun colorParaTemperatura(min: Int, max: Int): Int {
+        val avg = (min + max) / 2
+        return when {
+            avg <= 7 -> R.color.water_blue
+            avg <= 12 -> R.color.care_low_bg
+            avg <= 20 -> R.color.care_medium_bg
+            avg <= 28 -> R.color.care_high_bg
+            else -> R.color.alert_red
+        }
+    }
+
+    private fun calcularDiasRestantes(): Long {
+        val hoy = System.currentTimeMillis()
+        val proximoRiego = plant.ultimoRiego + (plant.wateringFrequencyDays.toLong() * 86400000L)
+        val diff = proximoRiego - hoy
+        return java.util.concurrent.TimeUnit.MILLISECONDS.toDays(diff)
+    }
+
+    private fun crearIndicator(
+        icono: Int,
+        titulo: String,
+        valor: String? = null,
+        sub: String? = null,
+        sunsLayout: LinearLayout? = null,
+        backgroundColor: Int? = null,
+        parentRow: LinearLayout? = null
+    ): View {
+        val inflater = LayoutInflater.from(requireContext())
+        val card = inflater.inflate(R.layout.item_cuidado_indicator, parentRow, false) as com.google.android.material.card.MaterialCardView
+        card.findViewById<ImageView>(R.id.imgIndicatorIcon).setImageResource(icono)
+        card.findViewById<TextView>(R.id.txtIndicatorTitle).text = titulo
+
+        if (backgroundColor != null) {
+            card.setCardBackgroundColor(ContextCompat.getColor(requireContext(), backgroundColor))
+        }
+
+        val txtValor = card.findViewById<TextView>(R.id.txtIndicatorValue)
+        val txtSub = card.findViewById<TextView>(R.id.txtIndicatorSub)
+        val layoutSuns = card.findViewById<LinearLayout>(R.id.layoutIndicatorSuns)
+
+        if (sunsLayout != null) {
+            txtValor.visibility = View.GONE
+            layoutSuns.visibility = View.VISIBLE
+            layoutSuns.removeAllViews()
+            for (i in 0 until sunsLayout.childCount) {
+                val sun = ImageView(requireContext()).apply {
+                    layoutParams = LinearLayout.LayoutParams(20, 20)
+                    setImageResource(R.drawable.sun)
+                }
+                layoutSuns.addView(sun)
+            }
+        } else {
+            txtValor.text = valor ?: "—"
+            layoutSuns.visibility = View.GONE
+        }
+
+        txtSub.text = sub ?: ""
+        txtSub.visibility = if (sub.isNullOrEmpty()) View.GONE else View.VISIBLE
+
+        return card
+    }
+
+    private fun crearSoles(luz: String): LinearLayout? {
+        val count = when {
+            luz.contains("Sol Directo", ignoreCase = true) -> 3
+            luz.contains("Sombra Parcial", ignoreCase = true) -> 2
+            luz.contains("Sombra", ignoreCase = true) -> 1
+            luz.contains("full sun", ignoreCase = true) -> 3
+            luz.contains("part", ignoreCase = true) -> 2
+            luz.contains("shade", ignoreCase = true) -> 1
+            luz.isBlank() -> 0
+            else -> 2
+        }
+        if (count == 0) return null
+        val layout = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.HORIZONTAL
+        }
+        for (i in 0 until count) {
+            layout.addView(ImageView(requireContext()).apply {
+                layoutParams = LinearLayout.LayoutParams(20, 20)
+                setImageResource(R.drawable.sun)
+            })
+        }
+        return layout
+    }
+
+    private fun crearBarraCuidado(): View {
+        val nivel = plant.nivelCuidado.lowercase()
+        val (nivelLabel, nivelColor, nivelesLlenos) = when {
+            nivel.contains("alto") || nivel.contains("high") -> Triple("Avanzado", R.color.care_high, 3)
+            nivel.contains("medio") || nivel.contains("medium") || nivel.contains("moderate") -> Triple("Medio", R.color.care_medium, 2)
+            nivel.contains("bajo") || nivel.contains("low") -> Triple("Fácil", R.color.care_low, 1)
+            else -> Triple(plant.nivelCuidado.ifEmpty { "—" }, R.color.primary_green, 1)
+        }
+
+        val root = LayoutInflater.from(requireContext()).inflate(R.layout.item_cuidado_indicator, null) as com.google.android.material.card.MaterialCardView
+
+        root.findViewById<ImageView>(R.id.imgIndicatorIcon).visibility = View.GONE
+        root.findViewById<TextView>(R.id.txtIndicatorTitle).text = "NIVEL DE CUIDADO"
+        root.findViewById<TextView>(R.id.txtIndicatorValue).text = nivelLabel
+        root.findViewById<TextView>(R.id.txtIndicatorValue).setTextColor(
+            ContextCompat.getColor(requireContext(), nivelColor)
+        )
+        root.findViewById<TextView>(R.id.txtIndicatorSub).visibility = View.GONE
+
+        val barraContainer = LinearLayout(requireContext()).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(0, 10, 0, 0)
+        }
+
+        val segmentColor = ContextCompat.getColor(requireContext(), nivelColor)
+        val emptyColor = ContextCompat.getColor(requireContext(), R.color.gris_linea)
+
+        for (i in 0 until 3) {
+            val segment = View(requireContext()).apply {
+                layoutParams = LinearLayout.LayoutParams(0, 8, 1f).apply {
+                    setMargins(3, 0, 3, 0)
+                }
+                val bg = GradientDrawable().apply {
+                    shape = GradientDrawable.RECTANGLE
+                    cornerRadius = 4f
+                    setColor(if (i < nivelesLlenos) segmentColor else emptyColor)
+                }
+                background = bg
+            }
+            barraContainer.addView(segment)
+        }
+
+        val labelsRow = LinearLayout(requireContext()).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(3, 4, 3, 0)
+        }
+
+        val labelColor = ContextCompat.getColor(requireContext(), R.color.gris_natural)
+        listOf("Fácil", "Medio", "Avanzado").forEach { label ->
+            labelsRow.addView(TextView(requireContext()).apply {
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                text = label
+                textSize = 10f
+                setTextColor(labelColor)
+                gravity = android.view.Gravity.CENTER
+            })
+        }
+
+        val innerLayout = root.findViewById<LinearLayout>(R.id.indicatorInner)
+        innerLayout.addView(barraContainer)
+        innerLayout.addView(labelsRow)
+
+        return root
     }
 
     private fun cargarCaracteristicas() {
