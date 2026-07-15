@@ -4,7 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_welcome_gradient">
+    android:background="@drawable/badge_rounded_green"
+    >
 
     <ImageView
         android:layout_width="700dp"
@@ -44,7 +45,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:text="FloraCare"
-            android:textColor="@color/forest_green"
+            android:textColor="@color/primary_green"
             android:textSize="32sp"
             android:textStyle="bold" />
     </LinearLayout>
@@ -58,7 +59,7 @@
         android:layout_marginTop="40dp"
         android:text="Correo electrónico"
         android:textColor="#333333"
-        android:textSize="14sp"
+        android:textSize="18sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/llHeaderContainer" />
@@ -71,17 +72,17 @@
         android:layout_marginHorizontal="32dp"
         android:layout_marginTop="8dp"
         android:hint="ejemplo@correo.com"
-        android:textColorHint="#555555"
+        android:textColorHint="@color/primary_green"
         app:boxBackgroundColor="@android:color/transparent"
-        app:boxStrokeColor="#555555"
+        app:boxStrokeColor="@color/primary_green"
         app:boxStrokeWidth="1dp"
         app:boxCornerRadiusBottomEnd="32dp"
         app:boxCornerRadiusBottomStart="32dp"
         app:boxCornerRadiusTopEnd="32dp"
         app:boxCornerRadiusTopStart="32dp"
-        app:hintTextColor="#555555"
+        app:hintTextColor="@color/primary_green"
         app:startIconDrawable="@drawable/ic_person"
-        app:startIconTint="#555555"
+        app:startIconTint="@color/primary_green"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvEmailLabel">
@@ -91,7 +92,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="textEmailAddress"
-            android:textColor="#555555" />
+            android:textColor="@color/primary_green" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <TextView
@@ -102,7 +103,7 @@
         android:layout_marginTop="16dp"
         android:text="Contraseña"
         android:textColor="#333333"
-        android:textSize="14sp"
+        android:textSize="18sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tilEmail" />
@@ -115,19 +116,20 @@
         android:layout_marginHorizontal="32dp"
         android:layout_marginTop="8dp"
         android:hint="................"
-        android:textColorHint="#555555"
+        android:textColorHint="@color/primary_green"
         app:boxBackgroundColor="@android:color/transparent"
-        app:boxStrokeColor="#555555"
+        app:boxStrokeColor="@color/primary_green"
+
         app:boxStrokeWidth="1dp"
         app:boxCornerRadiusBottomEnd="32dp"
         app:boxCornerRadiusBottomStart="32dp"
         app:boxCornerRadiusTopEnd="32dp"
         app:boxCornerRadiusTopStart="32dp"
-        app:hintTextColor="#555555"
+        app:hintTextColor="@color/primary_green"
         app:startIconDrawable="@drawable/lock_open_right"
-        app:startIconTint="#555555"
+        app:startIconTint="@color/primary_green"
         app:passwordToggleEnabled="true"
-        app:passwordToggleTint="#555555"
+        app:passwordToggleTint="@color/primary_green"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvPasswordLabel">
@@ -137,7 +139,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="textPassword"
-            android:textColor="#555555" />
+            android:textColor="@color/primary_green"/>
     </com.google.android.material.textfield.TextInputLayout>
 
     <TextView
@@ -179,11 +181,14 @@
         android:layout_marginTop="16dp"
         android:text="¿No tienes cuenta? Regístrate"
         android:textColor="#555555"
-        android:textSize="14sp"
+        android:textSize="16sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btnLogin" />
 
+    <include
+        android:id="@+id/loadingOverlay"
+        layout="@layout/layout_loading_overlay" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

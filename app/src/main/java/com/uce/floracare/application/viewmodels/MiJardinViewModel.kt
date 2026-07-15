@@ -248,6 +248,28 @@ class MiJardinViewModel(
         }
     }
 
+    fun regarPlanta(plant: PlantEntity) {
+        val task = currentTasks.find {
+            it.plantFirestoreId == plant.firestoreId
+        }
+        if (task != null) {
+            regarPlanta(plant, task)
+        } else {
+            viewModelScope.launch {
+                _uiState.value = MiJardinUiState.Loading
+                val result = waterPlantUseCase(plant)
+                if (result.isSuccess) {
+                    updateState()
+                } else {
+                    _uiState.value = MiJardinUiState.Error(
+                        result.exceptionOrNull()?.localizedMessage
+                            ?: "Error al registrar riego"
+                    )
+                }
+            }
+        }
+    }
+
     fun obtenerPlantaDeTarea(
         task: TaskEntity
     ): PlantEntity? {

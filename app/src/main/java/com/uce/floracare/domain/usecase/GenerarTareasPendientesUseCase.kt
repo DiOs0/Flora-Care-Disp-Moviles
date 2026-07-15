@@ -16,12 +16,12 @@ class GenerarTareasPendientesUseCase(
 
             val plantas =
                 plantRepository
-                    .getMyPlants()
+                    .getGardenPlantsFromLocal()
                     .getOrThrow()
 
             val tareasActuales =
                 taskRepository
-                    .getPendingTasks()
+                    .getPendingTasksFromLocal()
                     .getOrThrow()
 
             val ahora =
@@ -33,8 +33,9 @@ class GenerarTareasPendientesUseCase(
                     return@forEach
                 }
 
+                // Tolerancia de 5 segundos para compensar disparos de alarma ligeramente adelantados
                 val necesitaRiego =
-                    planta.nextWateringTimestamp <= ahora
+                    planta.nextWateringTimestamp <= (ahora + 5000L)
 
                 if (!necesitaRiego) {
                     return@forEach
@@ -57,17 +58,22 @@ class GenerarTareasPendientesUseCase(
                         ahora - planta.ultimoRiego
                     ).coerceAtLeast(0)
 
+                val horasTranscurridas =
+                    TimeUnit.MILLISECONDS.toHours(
+                        ahora - planta.ultimoRiego
+                    )
+
                 val textoDias =
-                    when (diasTranscurridos) {
-
-                        0L ->
-                            "La planta necesita ser regada"
-
-                        1L ->
-                            "Ha pasado 1 día desde el último riego"
-
-                        else ->
-                            "Han pasado $diasTranscurridos días desde el último riego"
+                    when {
+                        diasTranscurridos > 0L -> {
+                            if (diasTranscurridos == 1L) "Ha pasado 1 día desde el último riego"
+                            else "Han pasado $diasTranscurridos días desde el último riego"
+                        }
+                        horasTranscurridas > 0L -> {
+                            if (horasTranscurridas == 1L) "Ha pasado 1 hora desde el último riego"
+                            else "Han pasado $horasTranscurridas horas desde el último riego"
+                        }
+                        else -> "La planta necesita ser regada ahora"
                     }
 
                 val tarea =

@@ -9,6 +9,9 @@ interface TaskDao {
     @Query("SELECT * FROM tasks WHERE userId = :userId ORDER BY createdAt DESC")
     fun getTasksByUserId(userId: String): Flow<List<TaskEntity>>
 
+    @Query("SELECT * FROM tasks WHERE userId = :userId AND completed = 0")
+    suspend fun getPendingTasksList(userId: String): List<TaskEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTasks(tasks: List<TaskEntity>)
 

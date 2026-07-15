@@ -2,6 +2,7 @@
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="6dp"
@@ -74,6 +75,17 @@
                     android:src="@android:drawable/ic_menu_compass"
                     app:tint="@color/white" />
             </FrameLayout>
+
+            <!-- Animación de Riego Lottie -->
+            <com.airbnb.lottie.LottieAnimationView
+                android:id="@+id/lottieWatering"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_centerInParent="true"
+                android:visibility="gone"
+                app:lottie_rawRes="@raw/water_plant"
+                app:lottie_autoPlay="false"
+                app:lottie_loop="false" />
 
             <!-- Botón de Edición Rápida -->
             <com.google.android.material.imageview.ShapeableImageView

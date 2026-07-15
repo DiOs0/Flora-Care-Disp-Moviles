@@ -1,5 +1,6 @@
 package com.uce.floracare.application.adapters
 
+import android.animation.Animator
 import android.graphics.drawable.GradientDrawable
 import android.view.LayoutInflater
 import android.view.View
@@ -11,6 +12,7 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.airbnb.lottie.LottieAnimationView
 import com.bumptech.glide.Glide
 import com.uce.floracare.R
 import com.uce.floracare.data.remote.dto.PlantEntity
@@ -29,6 +31,7 @@ enum class PlantViewMode {
 class PlantAdapter(
     private val onPlantClick: (PlantEntity) -> Unit,
     private val onEditWatering: ((PlantEntity) -> Unit)? = null,
+    private val onWaterPlant: ((PlantEntity) -> Unit)? = null,
     private val layoutRes: Int? = null
 ) : ListAdapter<PlantEntity, RecyclerView.ViewHolder>(DiffCallback) {
 
@@ -128,6 +131,11 @@ class PlantAdapter(
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(plant: PlantEntity) {
+            binding.overlayConfirmWatering.visibility = View.GONE
+            binding.chkConfirmWatering.setOnCheckedChangeListener(null)
+            binding.chkConfirmWatering.isChecked = false
+            binding.txtWatered.visibility = View.GONE
+
             Glide.with(binding.imgPlantPhoto.context)
                 .load(plant.imagen)
                 .placeholder(R.drawable.ic_logo)
@@ -168,6 +176,7 @@ class PlantAdapter(
             binding.chkConfirmWatering.setOnCheckedChangeListener { _, isChecked ->
                 if (isChecked) {
                     binding.overlayConfirmWatering.visibility = View.GONE
+                    
                     binding.root.setCardBackgroundColor(ContextCompat.getColor(itemView.context, R.color.success_green_soft))
                     binding.root.strokeColor = ContextCompat.getColor(itemView.context, R.color.care_low)
                     binding.txtWatered.visibility = View.VISIBLE
@@ -176,6 +185,8 @@ class PlantAdapter(
                     binding.badgeBackground.background = ContextCompat.getDrawable(itemView.context, R.drawable.circle_success_green)
                     binding.badgeIcon.setImageResource(android.R.drawable.ic_menu_compass)
                     binding.badgeIcon.setColorFilter(ContextCompat.getColor(itemView.context, R.color.white))
+
+                    onWaterPlant?.invoke(plant)
                 }
             }
 
@@ -206,6 +217,11 @@ class PlantAdapter(
         private val btnEditWatering: ImageView = itemView.findViewById(R.id.btnEditWatering)
 
         fun bind(plant: PlantEntity) {
+            overlayConfirmWatering.visibility = View.GONE
+            chkConfirmWatering.setOnCheckedChangeListener(null)
+            chkConfirmWatering.isChecked = false
+            txtWatered.visibility = View.GONE
+
             Glide.with(imgPlantPhoto.context)
                 .load(plant.imagen)
                 .placeholder(R.drawable.ic_logo)
@@ -255,6 +271,7 @@ class PlantAdapter(
             chkConfirmWatering.setOnCheckedChangeListener { _, isChecked ->
                 if (isChecked) {
                     overlayConfirmWatering.visibility = View.GONE
+                    
                     cardRoot.setCardBackgroundColor(ContextCompat.getColor(itemView.context, R.color.success_green_soft))
                     cardRoot.strokeColor = ContextCompat.getColor(itemView.context, R.color.care_low)
                     txtWatered.visibility = View.VISIBLE
@@ -263,6 +280,8 @@ class PlantAdapter(
                     badgeBackground.background = ContextCompat.getDrawable(itemView.context, R.drawable.circle_success_green)
                     badgeIcon.setImageResource(android.R.drawable.ic_menu_compass)
                     badgeIcon.setColorFilter(ContextCompat.getColor(itemView.context, R.color.white))
+
+                    onWaterPlant?.invoke(plant)
                 }
             }
 
@@ -284,17 +303,17 @@ class PlantAdapter(
         val (bgColor, iconRes, iconTint) = when (status) {
             WateringStatus.URGENTE -> Triple(
                 R.color.care_high_bg,
-                android.R.drawable.ic_dialog_alert,
+                R.drawable.mood_bad_24px,
                 R.color.alert_red
             )
             WateringStatus.ATENCION_REQUERIDA -> Triple(
                 R.color.care_medium_bg,
-                android.R.drawable.ic_popup_reminder,
+                R.drawable.mood_bad_24px,
                 R.color.care_medium
             )
             WateringStatus.NORMAL -> Triple(
                 R.color.care_low_bg,
-                android.R.drawable.ic_menu_compass,
+                R.drawable.mood_heart_24px,
                 R.color.care_low
             )
         }

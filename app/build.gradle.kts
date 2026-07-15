@@ -95,7 +95,7 @@ dependencies {
     //lottie
     implementation(libs.lottie)
 
-    
+
 
     implementation("androidx.room:room-runtime:$roomVersion")
     ksp("androidx.room:room-compiler:$roomVersion")

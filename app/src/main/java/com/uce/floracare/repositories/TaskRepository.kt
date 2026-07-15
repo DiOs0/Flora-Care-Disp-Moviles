@@ -79,6 +79,17 @@ class TaskRepository(
         return firestoreManager.getTasks()
     }
 
+    suspend fun getPendingTasksFromLocal(): Result<List<TaskEntity>> {
+        return try {
+            val userId = authManager.getCurrentUserId()
+                ?: return Result.failure(Exception("Usuario no autenticado"))
+            val localTasks = taskDao.getPendingTasksList(userId)
+            Result.success(localTasks.map { it.toDomain() })
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun saveTask(
         task: TaskEntity
     ): Result<Unit> {

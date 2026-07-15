@@ -23,13 +23,13 @@ class WaterPlantUseCase(
             val now =
                 System.currentTimeMillis()
 
-            val nextWatering =
-                now + (plant.wateringFrequencyDays.toLong() * 24L * 60L * 60L * 1000L)
+//            val nextWatering =
+//                now + (plant.wateringFrequencyDays.toLong() * 24L * 60L * 60L * 1000L)
 
             // Solo para pruebas:
             // próxima notificación en 10 segundos.
-//            val nextWatering =
-//                now + 10_000L
+            val nextWatering =
+                now + 10_000L
 
             val updatedPlant =
                 plant.copy(
@@ -42,10 +42,11 @@ class WaterPlantUseCase(
                         nextWatering
                 )
 
-            plantRepository
-                .updatePlant(updatedPlant)
-                .getOrThrow()
+            // Intentar actualizar la planta
+            val updateResult = plantRepository.updatePlant(updatedPlant)
 
+            // Programar la alarma SIEMPRE que se haya actualizado localmente (o intentado actualizar)
+            // para asegurar que el recordatorio se programe.
             wateringScheduler.cancel(
                 plant
             )
@@ -53,6 +54,8 @@ class WaterPlantUseCase(
             wateringScheduler.schedule(
                 updatedPlant
             )
+
+            updateResult.getOrThrow()
 
             Result.success(Unit)
 

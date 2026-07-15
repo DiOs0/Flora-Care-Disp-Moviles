@@ -192,6 +192,17 @@ class PlantRepository(
         return firestoreManager.getUserPlants()
     }
 
+    suspend fun getGardenPlantsFromLocal(): Result<List<RemotePlantEntity>> {
+        return try {
+            val userId = authManager.getCurrentUserId()
+                ?: return Result.failure(Exception("Usuario no autenticado"))
+            val localPlants = plantDao.getGardenPlantsList(userId)
+            Result.success(localPlants.map { it.toRemoteEntity() })
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun getPlantById(plantId: Int): Result<RemotePlantEntity> {
         return try {
             val result = firestoreManager.getUserPlants()
@@ -209,7 +220,23 @@ class PlantRepository(
     }
 
     suspend fun updatePlant(plant: RemotePlantEntity): Result<Unit> {
-        return firestoreManager.updateUserPlant(plant)
+        return try {
+            val userId = authManager.getCurrentUserId()
+                ?: return Result.failure(Exception("Usuario no autenticado"))
+
+            // 1. Actualizar localmente para feedback inmediato
+            val localPlant = plant.toLocalEntity(userId)
+            plantDao.insertPlants(listOf(localPlant))
+
+            // 2. Sincronizar con Firestore
+            firestoreManager.updateUserPlant(plant).getOrThrow()
+
+            Result.success(Unit)
+
+        } catch (e: Exception) {
+            Log.e("PlantRepository", "Error actualizando planta", e)
+            Result.failure(e)
+        }
     }
 
     suspend fun deletePlant(firestoreId: String): Result<Unit> {

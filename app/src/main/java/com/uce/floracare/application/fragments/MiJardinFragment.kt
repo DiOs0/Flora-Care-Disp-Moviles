@@ -1,5 +1,6 @@
 package com.uce.floracare.application.fragments
 
+import android.animation.Animator
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -178,6 +179,11 @@ class MiJardinFragment : Fragment() {
             savedInstanceState
         )
 
+        // Si venimos de Login, mostramos el overlay inmediatamente
+        if (requireActivity().intent.getBooleanExtra("FROM_LOGIN", false)) {
+            binding.loadingOverlay.loadingOverlayRoot.visibility = View.VISIBLE
+        }
+
         setupRecyclerViews()
         setupToggleButton()
         setupObservers()
@@ -226,6 +232,11 @@ class MiJardinFragment : Fragment() {
                     showEditWateringDialog(
                         plant
                     )
+                },
+
+                onWaterPlant = { plant ->
+                    showWateringAnimation()
+                    viewModel.regarPlanta(plant)
                 }
             )
 
@@ -239,7 +250,7 @@ class MiJardinFragment : Fragment() {
                         )
 
                 if (plant != null) {
-
+                    showWateringAnimation()
                     viewModel.regarPlanta(
                         plant,
                         task
@@ -316,10 +327,16 @@ class MiJardinFragment : Fragment() {
                                 when (state) {
 
                                     is MiJardinUiState.Loading -> {
-                                        // Estado de carga
+                                        // Solo mostrar si no venimos de Login para evitar parpadeos
+                                        if (!requireActivity().intent.getBooleanExtra("FROM_LOGIN", false)) {
+                                            binding.loadingOverlay.loadingOverlayRoot.visibility = View.VISIBLE
+                                        }
                                     }
 
                                     is MiJardinUiState.Success -> {
+                                        binding.loadingOverlay.loadingOverlayRoot.visibility = View.GONE
+                                        // Limpiar flag para futuras cargas normales
+                                        requireActivity().intent.removeExtra("FROM_LOGIN")
 
                                         plantAdapter.submitList(
                                             state.plants
@@ -486,6 +503,24 @@ class MiJardinFragment : Fragment() {
                 )
             )
             .show()
+    }
+
+    private fun showWateringAnimation() {
+        binding.overlayWateringModal.apply {
+            visibility = View.VISIBLE
+            binding.lottieModalWatering.playAnimation()
+            
+            binding.lottieModalWatering.addAnimatorListener(object : Animator.AnimatorListener {
+                override fun onAnimationStart(animation: Animator) {}
+                override fun onAnimationEnd(animation: Animator) {
+                    visibility = View.GONE
+                }
+                override fun onAnimationCancel(animation: Animator) {
+                    visibility = View.GONE
+                }
+                override fun onAnimationRepeat(animation: Animator) {}
+            })
+        }
     }
 
     override fun onResume() {

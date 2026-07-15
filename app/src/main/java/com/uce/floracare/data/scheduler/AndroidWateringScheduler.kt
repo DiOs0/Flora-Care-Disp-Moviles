@@ -24,7 +24,7 @@ class AndroidWateringScheduler(
     override fun schedule(
         plant: PlantEntity
     ) {
-
+        Log.d(TAG, "intentando programar alarma para ${plant.nombreComun} con ID ${plant.firestoreId}")
         if (plant.firestoreId.isBlank()) {
 
             Log.e(
@@ -37,9 +37,8 @@ class AndroidWateringScheduler(
 
         val triggerTime =
             plant.nextWateringTimestamp
-                .coerceAtLeast(
-                    System.currentTimeMillis() + 1_000L
-                )
+
+        Log.d(TAG, "Programando alarma para ${plant.nombreComun} en $triggerTime (Ahora: ${System.currentTimeMillis()})")
 
         val pendingIntent =
             createSchedulePendingIntent(plant)

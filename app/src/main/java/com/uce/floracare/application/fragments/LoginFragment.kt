@@ -39,6 +39,7 @@ class LoginFragment : Fragment() {
             val password = binding.txtPassword.text.toString().trim()
 
             if (email.isNotEmpty() && password.isNotEmpty()) {
+                binding.loadingOverlay.loadingOverlayRoot.visibility = View.VISIBLE
                 val auth = AuthManager().getAuthInstance()
                 auth.signInWithEmailAndPassword(email, password)
                     .addOnCompleteListener { task ->
@@ -47,11 +48,14 @@ class LoginFragment : Fragment() {
                             if (user != null && user.isEmailVerified) {
                                 // Login exitoso y verificado
                                 val intent = Intent(requireContext(), MainActivity::class.java)
+                                // Pasamos un flag para que MiJardin sepa que viene de Login y mantenga el loading
+                                intent.putExtra("FROM_LOGIN", true)
                                 Toast.makeText(requireContext(), "Bienvenido: ${user.email}", Toast.LENGTH_SHORT).show()
                                 startActivity(intent)
                                 requireActivity().finish()
                             } else {
                                 // No verificado
+                                binding.loadingOverlay.loadingOverlayRoot.visibility = View.GONE
                                 auth.signOut()
                                 Toast.makeText(
                                     requireContext(),
@@ -60,6 +64,7 @@ class LoginFragment : Fragment() {
                                 ).show()
                             }
                         } else {
+                            binding.loadingOverlay.loadingOverlayRoot.visibility = View.GONE
                             Toast.makeText(
                                 requireContext(),
                                 "Error: ${task.exception?.message}",

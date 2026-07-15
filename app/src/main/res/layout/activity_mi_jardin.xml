@@ -55,7 +55,7 @@
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_marginEnd="4dp"
-            app:icon="@android:drawable/ic_menu_search"
+
             app:iconTint="@color/forest_green"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/btnAddPlant"
@@ -67,7 +67,7 @@
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_marginEnd="8dp"
-            app:icon="@android:drawable/ic_input_add"
+
             app:iconTint="@color/forest_green"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/ivProfile"
@@ -78,8 +78,8 @@
             android:layout_width="46dp"
             android:layout_height="46dp"
             android:scaleType="centerCrop"
-            android:src="@drawable/baseline_person_24"
-            app:tint="@color/forest_green"
+
+
             android:background="@color/accent_green"
             android:padding="10dp"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -250,6 +250,61 @@
         </LinearLayout>
 
     </androidx.core.widget.NestedScrollView>
+
+    <!-- MODAL OVERLAY DE RIEGO -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/overlayWateringModal"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#99000000"
+        android:clickable="true"
+        android:focusable="true"
+        android:elevation="150dp"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="280dp"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="28dp"
+            app:cardElevation="8dp"
+            app:cardBackgroundColor="@color/accent_green"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="24dp">
+
+                <com.airbnb.lottie.LottieAnimationView
+                    android:id="@+id/lottieModalWatering"
+                    android:layout_width="300dp"
+                    android:layout_height="200dp"
+                    app:lottie_autoPlay="false"
+                    app:lottie_loop="false"
+                    app:lottie_rawRes="@raw/water_plant" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="Regando planta..."
+                    android:textColor="@color/forest_green"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 

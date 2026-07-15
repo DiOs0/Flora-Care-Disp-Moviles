@@ -18,11 +18,11 @@ class ActualizarRiegoUseCase(
         val currentTime =
             System.currentTimeMillis()
 
-        val nextWatering =
-            currentTime + TimeUnit.DAYS.toMillis(wateringFrequencyDays.toLong())
-        // Solo para pruebas:
 //        val nextWatering =
-//            currentTime + 10_000L
+//            currentTime + TimeUnit.DAYS.toMillis(wateringFrequencyDays.toLong())
+        // Solo para pruebas:
+        val nextWatering =
+            currentTime + 10_000L
 
         return repository.updateWatering(
             plantId = plantId,

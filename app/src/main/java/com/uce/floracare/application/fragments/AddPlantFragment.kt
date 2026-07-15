@@ -7,7 +7,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ArrayAdapter
+import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.isVisible
@@ -28,6 +28,7 @@ import com.uce.floracare.data.remote.dto.PlantEntity
 import com.uce.floracare.data.remote.dto.Riego
 import com.uce.floracare.data.remote.dto.Temperatura
 import com.uce.floracare.databinding.FragmentAddPlantBinding
+import com.uce.floracare.domain.usecase.ObtenerCatalogoPlantasUseCase
 import com.uce.floracare.domain.usecase.RegistrarPlantaEnJardinUseCase
 import com.uce.floracare.domain.usecase.SubirImagenUseCase
 import com.uce.floracare.repositories.ImageRepositoryImpl
@@ -37,7 +38,6 @@ import com.uce.floracare.repositories.connections.remote.firebase.AuthManager
 import com.uce.floracare.repositories.connections.remote.firebase.FirestoreManager
 import com.uce.floracare.repositories.connections.remote.firebase.StorageManager
 import com.uce.floracare.utils.CameraManager
-import com.uce.floracare.utils.PlantConstants
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -47,46 +47,21 @@ class AddPlantFragment : Fragment() {
     private val binding get() = _binding!!
 
     private lateinit var cameraManager: CameraManager
-
     private var isExploreFlow: Boolean = false
-    private var originalPlantName: String? = null
-    private var originalPlantImage: String? = null
-    private var originalTempDescription: String? = null
 
     private val viewModel: AddPlantViewModel by viewModels {
         ViewModelFactory {
-
             val authManager = AuthManager()
-
             val firestoreManager = FirestoreManager(authManager)
-
             val database = FloraCareDatabase.getDatabase(requireContext())
-
-            val taskRepository = TaskRepository(
-                firestoreManager,
-                authManager,
-                database.taskDao()
-            )
-
-            val plantRepository = PlantRepository(
-                firestoreManager,
-                StorageManager(requireContext()),
-                authManager,
-                database.plantDao(),
-                taskRepository
-            )
-            val imageRepository =
-                ImageRepositoryImpl()
+            val taskRepository = TaskRepository(firestoreManager, authManager, database.taskDao())
+            val plantRepository = PlantRepository(firestoreManager, StorageManager(requireContext()), authManager, database.plantDao(), taskRepository)
+            val imageRepository = ImageRepositoryImpl()
 
             AddPlantViewModel(
-                registrarPlantaEnJardinUseCase =
-                    RegistrarPlantaEnJardinUseCase(
-                        plantRepository
-                    ),
-                subirImagenUseCase =
-                    SubirImagenUseCase(
-                        imageRepository
-                    )
+                registrarPlantaEnJardinUseCase = RegistrarPlantaEnJardinUseCase(plantRepository),
+                subirImagenUseCase = SubirImagenUseCase(imageRepository),
+                obtenerCatalogoPlantasUseCase = ObtenerCatalogoPlantasUseCase(plantRepository)
             )
         }
     }
@@ -95,10 +70,9 @@ class AddPlantFragment : Fragment() {
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         if (isGranted) {
-            binding.viewFinder.isVisible = true
-            cameraManager.startCamera(viewLifecycleOwner, binding.viewFinder)
+            startCameraPreview()
         } else {
-            Toast.makeText(requireContext(), "Se requiere permiso de cámara", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Se requiere permiso de cámara para esta experiencia", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -114,35 +88,143 @@ class AddPlantFragment : Fragment() {
         cameraManager = CameraManager(requireContext())
         
         initCloudinary()
-        setupDropdowns()
         setupObservers()
         initListeners()
         populateFormFromArguments()
-    }
-
-    private fun initCloudinary() {
-        try {
-            val config = mapOf(
-                "cloud_name" to "deqhd3bmp",
-                "api_key" to "188973848385489",
-                "api_secret" to "bmPFYmcccVKbOhp5g0U6LyHn8aE"
-            )
-            MediaManager.init(requireContext(), config)
-        } catch (e: Exception) {
-            // Ya inicializado
+        
+        // Iniciar cámara inmediatamente si no venimos de un catálogo
+        if (!isExploreFlow) {
+            requestPermissionLauncher.launch(Manifest.permission.CAMERA)
         }
     }
 
-    private fun setupDropdowns() {
-        binding.autoCompleteType.setAdapter(ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, PlantConstants.plantTypes))
-        binding.autoCompleteCycle.setAdapter(ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, PlantConstants.growthCycles))
-        binding.autoCompleteCareLevel.setAdapter(ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, PlantConstants.careLevels))
+    private fun startCameraPreview() {
+        binding.viewFinder.isVisible = true
+        cameraManager.startCamera(viewLifecycleOwner, binding.viewFinder)
+    }
 
-        val freqOptions = PlantConstants.wateringOptions.keys.toTypedArray()
-        binding.autoCompleteWateringFreq.setAdapter(ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, freqOptions))
+    private fun initListeners() {
+        binding.closeFromAddPlant.setOnClickListener { showLogoutDialog() }
+
+        binding.etPlantSpecies.setOnItemClickListener { parent, _, position, _ ->
+            val selectedSpecies = parent.getItemAtPosition(position) as String
+            viewModel.onSpeciesSelected(selectedSpecies)
+        }
+
+        binding.btnCapturePhoto.setOnClickListener {
+            capturePhoto()
+        }
+
+        binding.btnRetakePhoto.setOnClickListener {
+            resetToCamera()
+        }
+
+        binding.btnSavePlant.setOnClickListener { handleSaveAction() }
+    }
+
+    private fun capturePhoto() {
+        // Efecto visual de obturador
+        binding.cameraOverlay.animate().alpha(0.8f).setDuration(50).withEndAction {
+            binding.cameraOverlay.animate().alpha(0.3f).setDuration(100).start()
+        }.start()
+
+        cameraManager.takePhoto(
+            onPhotoSaved = { uri ->
+                showFormAfterCapture(uri)
+            },
+            onError = { 
+                Toast.makeText(requireContext(), "Error al capturar la imagen", Toast.LENGTH_SHORT).show() 
+            }
+        )
+    }
+
+    private fun showFormAfterCapture(uri: Uri) {
+        // 1. Guardar Uri en el ViewModel
+        viewModel.selectedPhotoUri = uri
+        binding.imgPlantPhoto.setImageURI(uri)
+
+        // 2. Animación de transición: Cámara -> Formulario
+        binding.cameraLayer.animate()
+            .alpha(0f)
+            .scaleX(0.8f)
+            .scaleY(0.8f)
+            .setDuration(400)
+            .setInterpolator(AccelerateDecelerateInterpolator())
+            .withEndAction {
+                binding.cameraLayer.isVisible = false
+                revealForm()
+            }.start()
+    }
+
+    private fun revealForm() {
+        binding.formLayer.isVisible = true
+        binding.formLayer.alpha = 0f
+        binding.formLayer.translationY = 200f
+        
+        binding.formLayer.animate()
+            .alpha(1f)
+            .translationY(0f)
+            .setDuration(500)
+            .setInterpolator(AccelerateDecelerateInterpolator())
+            .start()
+    }
+
+    private fun resetToCamera() {
+        binding.formLayer.animate()
+            .alpha(0f)
+            .translationY(200f)
+            .setDuration(300)
+            .withEndAction {
+                binding.formLayer.isVisible = false
+                binding.cameraLayer.isVisible = true
+                binding.cameraLayer.alpha = 0f
+                binding.cameraLayer.scaleX = 0.8f
+                binding.cameraLayer.scaleY = 0.8f
+                
+                binding.cameraLayer.animate()
+                    .alpha(1f)
+                    .scaleX(1f)
+                    .scaleY(1f)
+                    .setDuration(400)
+                    .start()
+                
+                startCameraPreview()
+            }.start()
     }
 
     private fun setupObservers() {
+        // Observar sugerencias de especies
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.speciesSuggestions.collect { speciesList ->
+                    val adapter = android.widget.ArrayAdapter(
+                        requireContext(),
+                        android.R.layout.simple_dropdown_item_1line,
+                        speciesList
+                    )
+                    binding.etPlantSpecies.setAdapter(adapter)
+                }
+            }
+        }
+
+        // Observar planta seleccionada del catálogo para auto-completar campos
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.selectedCatalogPlant.collect { plant ->
+                    plant?.let {
+                        // Solo auto-completar si el campo está vacío para no sobreescribir al usuario
+                        if (binding.etPlantName.text.isNullOrBlank()) {
+                            binding.etPlantName.setText(it.nombreComun)
+                        }
+                        // Actualizar la especie siempre que se seleccione del catálogo
+                        if (binding.etPlantSpecies.text.isNullOrBlank() || binding.etPlantSpecies.text.toString() != it.nombreCientifico) {
+                            binding.etPlantSpecies.setText(it.nombreCientifico, false)
+                        }
+                    }
+                }
+            }
+        }
+
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { state ->
@@ -150,7 +232,7 @@ class AddPlantFragment : Fragment() {
                         is AddPlantUiState.Loading -> setLoadingState(true)
                         is AddPlantUiState.Success -> {
                             setLoadingState(false)
-                            Toast.makeText(requireContext(), "¡Planta guardada!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(requireContext(), "¡Planta guardada con éxito!", Toast.LENGTH_SHORT).show()
                             parentFragmentManager.popBackStack()
                         }
                         is AddPlantUiState.Error -> {
@@ -164,93 +246,49 @@ class AddPlantFragment : Fragment() {
         }
     }
 
-    private fun initListeners() {
-        binding.closeFromAddPlant.setOnClickListener { showLogoutDialog() }
-
-        binding.btnCapturePhoto.setOnClickListener {
-            if (binding.viewFinder.isVisible) capturePhoto()
-            else requestPermissionLauncher.launch(Manifest.permission.CAMERA)
-        }
-
-        binding.imgPlantPhoto.setOnClickListener {
-            requestPermissionLauncher.launch(Manifest.permission.CAMERA)
-        }
-
-        binding.btnSavePlant.setOnClickListener { handleSaveAction() }
-    }
-
-    private fun capturePhoto() {
-        cameraManager.takePhoto(
-            onPhotoSaved = { uri ->
-                binding.viewFinder.isVisible = false
-                binding.imgPlantPhoto.setImageURI(uri)
-                viewModel.selectedPhotoUri = uri
-            },
-            onError = { Toast.makeText(requireContext(), "Error al tomar foto", Toast.LENGTH_SHORT).show() }
-        )
-    }
-
     private fun handleSaveAction() {
-        val plantEntity = buildPlantEntity(originalPlantImage ?: "")
+        val name = binding.etPlantName.text.toString().trim()
+        if (name.isEmpty()) {
+            binding.etPlantName.error = "Dale un nombre a tu planta"
+            return
+        }
+
+        val plantEntity = buildPlantEntity("")
         val photoUri = viewModel.selectedPhotoUri
         val photoFile = photoUri?.let { uriToFile(it) }
-
-        if (isExploreFlow && photoUri == null) {
-            val currentName = binding.etPlantName.text.toString().trim()
-            if (currentName == originalPlantName) {
-                showUnsavedAlert(plantEntity)
-                return
-            }
-        }
 
         viewModel.savePlant(plantEntity, isExploreFlow, photoFile)
     }
 
     private fun buildPlantEntity(currentImageUrl: String): PlantEntity {
+        // Si seleccionamos del catálogo, usamos esos datos como base, pero permitimos editar el nombre
+        val basePlant = viewModel.selectedCatalogPlant.value
+        
         return PlantEntity(
             nombreComun = binding.etPlantName.text.toString().trim(),
             nombreCientifico = binding.etPlantSpecies.text.toString().trim(),
-            tipo = binding.autoCompleteType.text.toString().trim(),
-            descripcion = binding.etDescription.text.toString().trim(),
-            cicloVida = binding.autoCompleteCycle.text.toString().trim(),
-            nivelCuidado = binding.autoCompleteCareLevel.text.toString().trim(),
-            caracteristicas = Caracteristicas(
-                medicinal = binding.chipMedicinal.isChecked,
-                indoor = binding.chipIndoor.isChecked,
-                tropical = binding.chipTropical.isChecked,
-                resistenteSequia = binding.chipDrought.isChecked,
-                toxicaHumanos = binding.chipToxicHumans.isChecked,
-                toxicaMascotas = binding.chipToxicPets.isChecked
-            ),
-            riego = Riego(
-                frecuencia = binding.etWateringFreq.text.toString().trim(),
-                cadaValor = binding.etWateringValue.text.toString().trim()
-            ),
-            wateringFrequencyDays = PlantConstants.wateringOptions[binding.autoCompleteWateringFreq.text.toString()] ?: 7,
-            luzSolar = binding.chipGroupSunlight.checkedChipIds.mapNotNull { id ->
-                when (id) {
-                    binding.solDirecto.id -> "Sol Directo"
-                    binding.sombraParcial.id -> "Sombra Parcial"
-                    binding.sombra.id -> "Sombra"
-                    else -> null
-                }
-            },
-            temperatura = Temperatura(
-                min = binding.etTempMin.text.toString().trim().toIntOrNull() ?: 0,
-                max = binding.etTempMax.text.toString().trim().toIntOrNull() ?: 0,
-                descripcion = originalTempDescription ?: "Personalizada"
-            ),
-            imagen = currentImageUrl
+            tipo = basePlant?.tipo ?: "Planta Capturada",
+            descripcion = basePlant?.descripcion ?: "Planta añadida desde cámara",
+            cicloVida = basePlant?.cicloVida ?: "Anual",
+            nivelCuidado = basePlant?.nivelCuidado ?: "Medio",
+            caracteristicas = basePlant?.caracteristicas ?: Caracteristicas(),
+            riego = basePlant?.riego ?: Riego(frecuencia = "Moderado", cadaValor = "1-3"),
+            wateringFrequencyDays = basePlant?.wateringFrequencyDays ?: 3,
+            luzSolar = basePlant?.luzSolar ?: listOf("Sombra Parcial"),
+            temperatura = basePlant?.temperatura ?: Temperatura(min = 15, max = 30, descripcion = "Óptima"),
+            imagen = currentImageUrl.ifEmpty { basePlant?.imagen ?: "" }
         )
     }
 
-    private fun showUnsavedAlert(plantEntity: PlantEntity) {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Sin cambios detectados")
-            .setMessage("¿Deseas guardar la planta de todas formas?")
-            .setPositiveButton("Sí") { _, _ -> viewModel.savePlant(plantEntity, true) }
-            .setNegativeButton("Cancelar", null)
-            .show()
+    private fun initCloudinary() {
+        try {
+            val config = mapOf(
+                "cloud_name" to "deqhd3bmp",
+                "api_key" to "188973848385489",
+                "api_secret" to "bmPFYmcccVKbOhp5g0U6LyHn8aE"
+            )
+            MediaManager.init(requireContext(), config)
+        } catch (e: Exception) {}
     }
 
     private fun uriToFile(uri: Uri): File? {
@@ -271,7 +309,15 @@ class AddPlantFragment : Fragment() {
     private fun setLoadingState(loading: Boolean) {
         binding.progressBar.isVisible = loading
         binding.btnSavePlant.isEnabled = !loading
-        binding.btnCapturePhoto.isEnabled = !loading
+    }
+
+    private fun showLogoutDialog() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Salir")
+            .setMessage("¿Deseas cancelar el proceso?")
+            .setPositiveButton("Sí") { _, _ -> parentFragmentManager.popBackStack() }
+            .setNegativeButton("No", null)
+            .show()
     }
 
     private fun populateFormFromArguments() {
@@ -285,56 +331,20 @@ class AddPlantFragment : Fragment() {
 
             if (entity != null) {
                 isExploreFlow = true
-                originalPlantName = entity.nombreComun
-                originalPlantImage = entity.imagen
-                originalTempDescription = entity.temperatura.descripcion
+                viewModel.setInitialPlant(entity) // Sincronizar con el ViewModel
 
                 binding.apply {
                     etPlantName.setText(entity.nombreComun)
                     etPlantSpecies.setText(entity.nombreCientifico)
-                    autoCompleteType.setText(entity.tipo, false)
-                    etDescription.setText(entity.descripcion)
-                    autoCompleteCycle.setText(entity.cicloVida, false)
-                    autoCompleteCareLevel.setText(entity.nivelCuidado, false)
-                    etWateringFreq.setText(entity.riego.frecuencia)
-                    etWateringValue.setText(entity.riego.cadaValor)
-                    
-                    val freqText = PlantConstants.wateringOptions.entries.find { it.value == entity.wateringFrequencyDays }?.key
-                    autoCompleteWateringFreq.setText(freqText, false)
-
-                    etTempMin.setText(entity.temperatura.min.toString())
-                    etTempMax.setText(entity.temperatura.max.toString())
-
-                    chipMedicinal.isChecked = entity.caracteristicas.medicinal
-                    chipIndoor.isChecked = entity.caracteristicas.indoor
-                    chipTropical.isChecked = entity.caracteristicas.tropical
-                    chipDrought.isChecked = entity.caracteristicas.resistenteSequia
-                    chipToxicHumans.isChecked = entity.caracteristicas.toxicaHumanos
-                    chipToxicPets.isChecked = entity.caracteristicas.toxicaMascotas
-
-                    entity.luzSolar.forEach { luz ->
-                        when (luz.lowercase().trim()) {
-                            "sol directo", "full sun" -> solDirecto.isChecked = true
-                            "sombra parcial", "part sun", "part shade", "partial sun", "partial shade" -> sombraParcial.isChecked = true
-                            "sombra", "shade" -> sombra.isChecked = true
-                        }
-                    }
+                    // Mostrar el formulario directamente si ya tenemos los datos
+                    cameraLayer.isVisible = false
+                    formLayer.isVisible = true
+                    formLayer.alpha = 1f
+                    formLayer.translationY = 0f
+                    imgPlantPhoto.setImageURI(null) // O cargar desde URL si es necesario
                 }
-                viewModel.selectedLocation = if (entity.caracteristicas.indoor) "Interior" else "Exterior"
             }
         }
-    }
-
-    private fun showLogoutDialog() {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Cerrar sesión")
-            .setMessage("¿Seguro que desea salir?")
-            .setPositiveButton("Sí") { _, _ ->
-                startActivity(Intent(requireContext(), Login::class.java))
-                requireActivity().finish()
-            }
-            .setNegativeButton("No", null)
-            .show()
     }
 
     override fun onDestroyView() {
