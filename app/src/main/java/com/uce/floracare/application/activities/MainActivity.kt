@@ -30,30 +30,46 @@ class MainActivity : AppCompatActivity() {
             if (granted) {
                 showFirstInstallNotification()
             }
-
         }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
+    override fun onCreate(
+        savedInstanceState: Bundle?
+    ) {
         super.onCreate(savedInstanceState)
 
         binding =
-            ActivityMainBinding.inflate(layoutInflater)
+            ActivityMainBinding.inflate(
+                layoutInflater
+            )
 
-        setContentView(binding.root)
+        setContentView(
+            binding.root
+        )
 
-        // Crear el canal de notificaciones
-        NotificationHelper.createChannel(this)
+        NotificationHelper.createChannel(
+            this
+        )
+
+        setupBottomNavigation()
 
         if (savedInstanceState == null) {
 
-            binding.bottomNavigation.selectedItemId =
-                R.id.nav_jardin
+            val openedFromNotification =
+                handleNotificationIntent(
+                    intent
+                )
 
-            loadFragment(
-                MiJardinFragment()
-            )
+            if (!openedFromNotification) {
 
+                binding.bottomNavigation.selectedItemId =
+                    R.id.nav_jardin
+            }
         }
+
+        requestNotificationPermission()
+    }
+
+    private fun setupBottomNavigation() {
 
         binding.bottomNavigation
             .setOnItemSelectedListener { menuItem ->
@@ -98,18 +114,16 @@ class MainActivity : AppCompatActivity() {
 
                     else -> false
                 }
-
             }
-
-        // Solicitar permiso de notificaciones
-        requestNotificationPermission()
-
-        // Revisar si MainActivity fue abierta
-        // desde una notificación
-        handleNotificationIntent(intent)
     }
 
-    fun loadFragment(fragment: Fragment) {
+    fun loadFragment(
+        fragment: Fragment
+    ) {
+
+        if (isFinishing || isDestroyed) {
+            return
+        }
 
         supportFragmentManager
             .beginTransaction()
@@ -119,14 +133,14 @@ class MainActivity : AppCompatActivity() {
             )
             .addToBackStack(null)
             .commit()
-
     }
 
-    fun setSelectedMenuItem(itemId: Int) {
+    fun setSelectedMenuItem(
+        itemId: Int
+    ) {
 
         binding.bottomNavigation.selectedItemId =
             itemId
-
     }
 
     private fun requestNotificationPermission() {
@@ -150,15 +164,12 @@ class MainActivity : AppCompatActivity() {
             } else {
 
                 showFirstInstallNotification()
-
             }
 
         } else {
 
             showFirstInstallNotification()
-
         }
-
     }
 
     private fun showFirstInstallNotification() {
@@ -177,7 +188,9 @@ class MainActivity : AppCompatActivity() {
 
         if (first) {
 
-            WelcomeNotification.show(this)
+            WelcomeNotification.show(
+                this
+            )
 
             prefs.edit()
                 .putBoolean(
@@ -185,37 +198,41 @@ class MainActivity : AppCompatActivity() {
                     false
                 )
                 .apply()
-
         }
-
     }
 
     private fun handleNotificationIntent(
         intent: Intent?
-    ) {
+    ): Boolean {
 
-        when (
+        val destination =
             intent?.getStringExtra(
                 "navigate_to"
             )
-        ) {
 
-            "mi_jardin" -> {
-
-                binding.bottomNavigation.selectedItemId =
-                    R.id.nav_jardin
-
-            }
-
+        if (destination != "mi_jardin") {
+            return false
         }
 
+        binding.bottomNavigation.selectedItemId =
+            R.id.nav_jardin
+
+        intent.removeExtra(
+            "navigate_to"
+        )
+
+        return true
     }
 
-    override fun onNewIntent(intent: Intent) {
+    override fun onNewIntent(
+        intent: Intent
+    ) {
         super.onNewIntent(intent)
 
         setIntent(intent)
 
-        handleNotificationIntent(intent)
+        handleNotificationIntent(
+            intent
+        )
     }
 }

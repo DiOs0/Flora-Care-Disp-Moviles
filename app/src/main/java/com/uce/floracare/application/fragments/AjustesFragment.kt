@@ -72,9 +72,7 @@ class AjustesFragment : Fragment() {
                 )
 
             val userRepository =
-                UserRepository(
-                    GetUserProfileUC()
-                )
+                UserRepository()
 
             val taskRepository =
                 TaskRepository(
@@ -180,7 +178,7 @@ class AjustesFragment : Fragment() {
             savedInstanceState
         )
 
-        cargarDatosGoogle()
+//        cargarDatosGoogle()
 
         setupNotificationSwitch()
 
@@ -242,89 +240,89 @@ class AjustesFragment : Fragment() {
             }
     }
 
-    private fun cargarDatosGoogle() {
-
-        val firebaseUser =
-            FirebaseAuth.getInstance()
-                .currentUser
-
-        val prefs =
-            requireContext()
-                .getSharedPreferences(
-                    PREFS_NAME,
-                    Context.MODE_PRIVATE
-                )
-
-        val nombreGuardado =
-            prefs.getString(
-                KEY_USER_NAME,
-                "Usuario FloraCare"
-            )
-                ?: "Usuario FloraCare"
-
-        val correoGuardado =
-            prefs.getString(
-                KEY_USER_EMAIL,
-                ""
-            )
-                ?: ""
-
-        val fotoGuardada =
-            prefs.getString(
-                KEY_USER_PHOTO,
-                null
-            )
-
-        val nombre =
-            firebaseUser
-                ?.displayName
-                ?.takeIf {
-                    it.isNotBlank()
-                }
-                ?: nombreGuardado
-
-        val correo =
-            firebaseUser
-                ?.email
-                ?.takeIf {
-                    it.isNotBlank()
-                }
-                ?: correoGuardado
-
-        val foto =
-            firebaseUser
-                ?.photoUrl
-                ?.toString()
-                ?.takeIf {
-                    it.isNotBlank()
-                }
-                ?: fotoGuardada
-
-        binding.tvNombre.text =
-            nombre
-
-        binding.tvCorreo.text =
-            correo
-
-        cargarFotoPerfil(
-            foto
-        )
-
-        prefs.edit()
-            .putString(
-                KEY_USER_NAME,
-                nombre
-            )
-            .putString(
-                KEY_USER_EMAIL,
-                correo
-            )
-            .putString(
-                KEY_USER_PHOTO,
-                foto
-            )
-            .apply()
-    }
+//    private fun cargarDatosGoogle() {
+//
+//        val firebaseUser =
+//            FirebaseAuth.getInstance()
+//                .currentUser
+//
+//        val prefs =
+//            requireContext()
+//                .getSharedPreferences(
+//                    PREFS_NAME,
+//                    Context.MODE_PRIVATE
+//                )
+//
+//        val nombreGuardado =
+//            prefs.getString(
+//                KEY_USER_NAME,
+//                "Usuario FloraCare"
+//            )
+//                ?: "Usuario FloraCare"
+//
+//        val correoGuardado =
+//            prefs.getString(
+//                KEY_USER_EMAIL,
+//                ""
+//            )
+//                ?: ""
+//
+//        val fotoGuardada =
+//            prefs.getString(
+//                KEY_USER_PHOTO,
+//                null
+//            )
+//
+//        val nombre =
+//            firebaseUser
+//                ?.displayName
+//                ?.takeIf {
+//                    it.isNotBlank()
+//                }
+//                ?: nombreGuardado
+//
+//        val correo =
+//            firebaseUser
+//                ?.email
+//                ?.takeIf {
+//                    it.isNotBlank()
+//                }
+//                ?: correoGuardado
+//
+//        val foto =
+//            firebaseUser
+//                ?.photoUrl
+//                ?.toString()
+//                ?.takeIf {
+//                    it.isNotBlank()
+//                }
+//                ?: fotoGuardada
+//
+//        binding.tvNombre.text =
+//            nombre
+//
+//        binding.tvCorreo.text =
+//            correo
+//
+//        cargarFotoPerfil(
+//            foto
+//        )
+//
+//        prefs.edit()
+//            .putString(
+//                KEY_USER_NAME,
+//                nombre
+//            )
+//            .putString(
+//                KEY_USER_EMAIL,
+//                correo
+//            )
+//            .putString(
+//                KEY_USER_PHOTO,
+//                foto
+//            )
+//            .apply()
+//    }
 
     private fun cargarFotoPerfil(
         photoUrl: String?
@@ -379,20 +377,25 @@ class AjustesFragment : Fragment() {
 
         binding.btnGuardarPerfil.setOnClickListener {
 
-            val newName =
+            val nombreEscrito =
                 binding.etNombre.text
                     ?.toString()
                     ?.trim()
                     .orEmpty()
 
-            if (
-                newName.isBlank() &&
-                selectedImageFile == null
-            ) {
+            val nombreFinal =
+                nombreEscrito.ifBlank {
+                    binding.tvNombre.text
+                        ?.toString()
+                        ?.trim()
+                        .orEmpty()
+                }
+
+            if (nombreFinal.isBlank()) {
 
                 Toast.makeText(
                     requireContext(),
-                    "Ingresa un nombre o selecciona una foto",
+                    "El nombre no puede estar vacío",
                     Toast.LENGTH_SHORT
                 ).show()
 
@@ -400,7 +403,7 @@ class AjustesFragment : Fragment() {
             }
 
             viewModel.updateProfile(
-                newName,
+                nombreFinal,
                 selectedImageFile
             )
         }
@@ -545,31 +548,11 @@ class AjustesFragment : Fragment() {
         profilePhoto: String?
     ) {
 
-        val firebaseUser =
-            FirebaseAuth.getInstance()
-                .currentUser
-
-        val prefs =
-            requireContext()
-                .getSharedPreferences(
-                    PREFS_NAME,
-                    Context.MODE_PRIVATE
-                )
-
         val name =
             profileName
                 ?.takeIf {
                     it.isNotBlank()
                 }
-                ?: firebaseUser
-                    ?.displayName
-                    ?.takeIf {
-                        it.isNotBlank()
-                    }
-                ?: prefs.getString(
-                    KEY_USER_NAME,
-                    "Usuario FloraCare"
-                )
                 ?: "Usuario FloraCare"
 
         val email =
@@ -577,15 +560,6 @@ class AjustesFragment : Fragment() {
                 ?.takeIf {
                     it.isNotBlank()
                 }
-                ?: firebaseUser
-                    ?.email
-                    ?.takeIf {
-                        it.isNotBlank()
-                    }
-                ?: prefs.getString(
-                    KEY_USER_EMAIL,
-                    ""
-                )
                 ?: ""
 
         val photo =
@@ -593,16 +567,6 @@ class AjustesFragment : Fragment() {
                 ?.takeIf {
                     it.isNotBlank()
                 }
-                ?: firebaseUser
-                    ?.photoUrl
-                    ?.toString()
-                    ?.takeIf {
-                        it.isNotBlank()
-                    }
-                ?: prefs.getString(
-                    KEY_USER_PHOTO,
-                    null
-                )
 
         binding.tvNombre.text =
             name
@@ -613,21 +577,6 @@ class AjustesFragment : Fragment() {
         cargarFotoPerfil(
             photo
         )
-
-        prefs.edit()
-            .putString(
-                KEY_USER_NAME,
-                name
-            )
-            .putString(
-                KEY_USER_EMAIL,
-                email
-            )
-            .putString(
-                KEY_USER_PHOTO,
-                photo
-            )
-            .apply()
     }
 
     private fun showLoading(

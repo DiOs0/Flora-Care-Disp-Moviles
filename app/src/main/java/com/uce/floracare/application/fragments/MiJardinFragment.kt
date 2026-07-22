@@ -12,8 +12,11 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.bumptech.glide.Glide
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.uce.floracare.R
 import com.uce.floracare.application.activities.MainActivity
 import com.uce.floracare.application.adapters.PlantAdapter
@@ -184,6 +187,7 @@ class MiJardinFragment : Fragment() {
             binding.loadingOverlay.loadingOverlayRoot.visibility = View.VISIBLE
         }
 
+        cargarFotoPerfil()
         setupRecyclerViews()
         setupToggleButton()
         setupObservers()
@@ -195,6 +199,57 @@ class MiJardinFragment : Fragment() {
 
             viewModel.fetchData()
         }
+    }
+
+    private fun cargarFotoPerfil() {
+
+        val userId =
+            FirebaseAuth.getInstance()
+                .currentUser
+                ?.uid
+                ?: return
+
+        FirebaseFirestore.getInstance()
+            .collection("users")
+            .document(userId)
+            .get()
+            .addOnSuccessListener { document ->
+
+                val currentBinding =
+                    _binding
+                        ?: return@addOnSuccessListener
+
+                val photoUrl =
+                    document.getString(
+                        "photoUrl"
+                    )
+
+                Glide.with(
+                    currentBinding.ivProfile
+                )
+                    .load(photoUrl)
+                    .placeholder(
+                        R.drawable.baseline_person_24
+                    )
+                    .error(
+                        R.drawable.baseline_person_24
+                    )
+                    .centerCrop()
+                    .into(
+                        currentBinding.ivProfile
+                    )
+            }
+            .addOnFailureListener {
+
+                val currentBinding =
+                    _binding
+                        ?: return@addOnFailureListener
+
+                currentBinding.ivProfile
+                    .setImageResource(
+                        R.drawable.baseline_person_24
+                    )
+            }
     }
 
     private fun setupRecyclerViews() {
@@ -527,6 +582,7 @@ class MiJardinFragment : Fragment() {
         super.onResume()
 
         viewModel.fetchData()
+            cargarFotoPerfil()
     }
 
     override fun onDestroyView() {
